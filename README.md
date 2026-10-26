@@ -2,7 +2,7 @@
 
 **Reglex: the FPI regulation game** — an adaptive, case-based game on India's foreign portfolio investor (FPI) regulations: Regular FPI, SWAGAT-FI and GS-FPI.
 
-**Play:** [https://ironmanbro.github.io/reglex-fpi-game/](http://reglex.netlify.app)
+**Play:** https://reglex.ironmanbro.workers.dev/
 
 ## What it does
 
