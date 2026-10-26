@@ -1,12 +1,12 @@
 # Reglex · FPI Game
 
-**Custody Desk League** — an adaptive, case-based quiz on India's foreign portfolio investor (FPI) regulations: Regular FPI, SWAGAT-FI and GS-FPI.
+**Reglex: the FPI regulation game** — an adaptive, case-based game on India's foreign portfolio investor (FPI) regulations: Regular FPI, SWAGAT-FI and GS-FPI.
 
 **Play:** [https://ironmanbro.github.io/reglex-fpi-game/](http://reglex.netlify.app)
 
 ## What it does
 
-- **175 case files** built from public SEBI material, covering Chapters II–VI and the Second Schedule of the SEBI (FPI) Regulations 2019, plus SWAGAT-FI and GS-FPI.
+- **Case files** built from public SEBI material, covering Chapters II–VI and the Second Schedule of the SEBI (FPI) Regulations 2019, plus SWAGAT-FI and GS-FPI.
 - **Adaptive difficulty:** a right answer brings a harder case (Easy → Medium → Hard); a wrong answer an easier one. Rounds of 10, 15, 20 or 25.
 - **After every answer:** why the right option is right, why each other option is wrong, and **the exact wording of the regulation** behind it.
 - **Look back during a round:** revisit earlier answers read-only; answers are locked.
@@ -19,12 +19,14 @@ All entities are fictional. Built only from public SEBI material. Not legal advi
 
 | Path | What it is |
 |---|---|
-| `index.html` | The game (served by GitHub Pages from the repo root) |
+| `index.html` | The game, noir design (served by GitHub Pages from the repo root) |
+| `og.png` | 1200×630 link preview image for LinkedIn and other sites |
+| `designs/classic/index.html` | Previous light "Custody Desk League" design |
 | `questions.csv` | The question bank the game reads at load time |
 | `config.js` | Public league-table settings (Supabase URL + anon key; database rules allow read + insert only) |
 | `question-bank/Question_Bank.xlsx` | Master question bank: edit and review here (status, checks, summary) |
 | `supabase/supabase-setup.sql` | Creates the `scores` table and its access rules |
-| `designs/noir/index.html` | Alternative noir "detective desk" design (self-contained, built-in questions) |
+| `designs/noir/index.html` | Early noir prototype (built-in questions only) |
 | `tools/` | Scripts that rebuild the workbook and CSV from `tools/data/questions.json`, and extract regulation quotes |
 | `tests/` | Playwright scripts used to test rounds, the answer review and locked review (reference) |
 

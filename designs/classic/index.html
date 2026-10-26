@@ -1,0 +1,1111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Custody Desk League</title>
+<meta name="description" content="A free, adaptive quiz on India's FPI regulations: Regular FPI, SWAGAT-FI and GS-FPI. Each right answer brings a harder case. Live public league table.">
+<meta property="og:title" content="Custody Desk League">
+<meta property="og:description" content="Onboarding, limits, SWAGAT-FI and GS-FPI cases. Make the call, then read the clause that decides it.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0E5A73">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%230E5A73'/%3E%3Cpath d='M18 20h28v6H18zM18 30h28v6H18zM18 40h18v6H18z' fill='%23fff'/%3E%3C/svg%3E">
+<script src="config.js?v=2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: the desk (case file + decision slip) on the left, the live league table pinned on the right; stacks on phones. */
+:root{
+  --paper:#EEF1F4; --sheet:#FFFFFF; --ink:#13202B; --muted:#5A6774; --rule:#D3DAE1;
+  --accent:#0E5A73; --accent-soft:#E0EEF3;
+  --ok:#1D6A46; --ok-soft:#E3F2EA; --bad:#B0281F; --bad-soft:#F8E6E4; --warn:#9A6200; --warn-soft:#FBF0DC;
+  --f-display:"Archivo",system-ui,sans-serif;
+  --f-body:"Source Serif 4",Georgia,serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0F161C; --sheet:#17212A; --ink:#E4EAF0; --muted:#93A1AE; --rule:#2A3742;
+  --accent:#5DB6D3; --accent-soft:#16323D;
+  --ok:#5CC48F; --ok-soft:#143024; --bad:#F07A70; --bad-soft:#3A1A18; --warn:#E3A93E; --warn-soft:#33270F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0F161C; --sheet:#17212A; --ink:#E4EAF0; --muted:#93A1AE; --rule:#2A3742;
+  --accent:#5DB6D3; --accent-soft:#16323D;
+  --ok:#5CC48F; --ok-soft:#143024; --bad:#F07A70; --bad-soft:#3A1A18; --warn:#E3A93E; --warn-soft:#33270F; color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0}
+[hidden]{display:none!important}
+img{max-width:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55}
+.wrap{max-width:1180px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;border-bottom:2px solid var(--ink);padding-bottom:12px}
+.brand h1{font-family:var(--f-display);font-stretch:118%;font-weight:800;font-size:clamp(28px,5vw,40px);line-height:1;margin:0;letter-spacing:-.01em}
+.brand p{margin:6px 0 0;color:var(--muted);font-size:14px;max-width:62ch}
+.meters{display:flex;gap:20px;font-family:var(--f-mono);font-size:13px;font-variant-numeric:tabular-nums}
+.meter span{display:block;font-family:var(--f-display);font-stretch:80%;font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:11px;color:var(--muted)}
+.meter b{font-size:20px;font-weight:600}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:24px;align-items:start}
+@media (max-width:920px){.layout{grid-template-columns:minmax(0,1fr)}}
+.layout.solo{grid-template-columns:minmax(0,1fr);max-width:820px}
+.game{display:flex;flex-direction:column;gap:16px;min-width:0}
+.ladder{display:flex;align-items:center;gap:10px;font-family:var(--f-mono);font-size:12px;color:var(--muted);flex-wrap:wrap}
+.rungs{display:flex;gap:4px}
+.rungs i{width:34px;height:8px;background:var(--rule);border-radius:1px}
+.rungs i.on{background:var(--accent)}
+.progress{display:flex;gap:3px}
+.progress i,.progress .seg{flex:1;height:6px;background:var(--rule);border-radius:1px}
+.progress .seg{border:0;padding:0;cursor:pointer;height:10px;margin-top:-2px;transition:transform .1s}
+.progress .seg:hover{transform:scaleY(1.4)}
+.progress .seg:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.progress .seg.ok{background:var(--ok)} .progress .seg.bad{background:var(--bad)}
+.progress .sel{box-shadow:0 0 0 2px var(--sheet),0 0 0 4px var(--accent)}
+.linkbtn{margin-left:auto;font:inherit;font-family:var(--f-mono);font-size:12.5px;color:var(--accent);background:none;border:0;padding:4px 0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.linkbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.lockbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;background:var(--warn-soft);border:1px solid var(--warn);color:var(--ink);padding:10px 12px;border-radius:3px;font-family:var(--f-mono);font-size:13px}
+.locknav{display:flex;gap:6px;flex-wrap:wrap}
+.btn:disabled{opacity:.45;cursor:default}
+.opt.locked{cursor:not-allowed}
+.yours{font-style:normal;font-family:var(--f-mono);font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--bad);margin-left:6px}
+.opt.right .yours{color:var(--ok)}
+.progress i.ok{background:var(--ok)} .progress i.bad{background:var(--bad)} .progress i.cur{background:var(--accent)}
+.file{position:relative;background:var(--sheet);border:1px solid var(--rule);padding:22px 22px 26px;overflow:hidden}
+.file::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:repeating-linear-gradient(90deg,var(--accent) 0 18px,transparent 18px 24px)}
+.tabrow{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.mode{font-family:var(--f-display);font-stretch:80%;font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:12px;color:var(--accent)}
+.file h2{font-family:var(--f-display);font-weight:700;font-size:23px;line-height:1.2;margin:10px 0 14px;text-wrap:balance}
+dl{display:grid;grid-template-columns:minmax(110px,auto) minmax(0,1fr);margin:0;border-top:1px solid var(--rule)}
+dt,dd{margin:0;padding:8px 0;border-bottom:1px solid var(--rule)}
+dt{font-family:var(--f-display);font-stretch:80%;font-weight:600;text-transform:uppercase;letter-spacing:.07em;font-size:11.5px;color:var(--muted);padding-right:14px;padding-top:11px}
+dd{font-size:15px}
+.meta{margin:14px 0 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--muted)}
+.chip{font-family:var(--f-mono);font-size:11px;padding:2px 7px;border-radius:2px;border:1px solid var(--rule);white-space:nowrap}
+.chip.sec{border-color:var(--warn);color:var(--warn);background:var(--warn-soft)}
+.chip.d1{border-color:var(--ok);color:var(--ok)} .chip.d2{border-color:var(--accent);color:var(--accent)} .chip.d3{border-color:var(--bad);color:var(--bad)}
+.chip.live{border-color:var(--ok);color:var(--ok);background:var(--ok-soft)}
+.stamp{position:absolute;right:18px;bottom:18px;font-family:var(--f-display);font-stretch:125%;font-weight:800;font-size:24px;letter-spacing:.06em;text-transform:uppercase;padding:5px 12px;border:4px double currentColor;transform:rotate(-9deg);opacity:.9;pointer-events:none}
+.stamp.ok{color:var(--ok)} .stamp.bad{color:var(--bad)}
+@media (prefers-reduced-motion:no-preference){.stamp{animation:thud .28s cubic-bezier(.2,1.6,.4,1)}@keyframes thud{from{transform:rotate(-9deg) scale(1.9);opacity:0}to{transform:rotate(-9deg) scale(1);opacity:.9}}}
+.q{font-family:var(--f-display);font-weight:600;font-size:18px;line-height:1.35;margin:0;text-wrap:balance}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;text-align:left;width:100%;font:inherit;font-size:15px;line-height:1.45;color:var(--ink);background:var(--sheet);border:1px solid var(--rule);padding:11px 12px;cursor:pointer;border-radius:3px}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt:focus-visible,.btn:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.opt kbd{font-family:var(--f-mono);font-size:12px;border:1px solid var(--rule);border-radius:2px;text-align:center;padding:1px 0;color:var(--muted)}
+.opt:disabled{cursor:default}
+.opt.right{border-color:var(--ok);background:var(--ok-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt.dim{opacity:.6}
+.verdict{background:var(--sheet);border:1px solid var(--rule);border-left:4px solid var(--accent);padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.verdict.ok{border-left-color:var(--ok)} .verdict.bad{border-left-color:var(--bad)}
+.verdict h3{margin:0;font-family:var(--f-display);font-weight:700;font-size:16px}
+.verdict h4{margin:4px 0 0;font-family:var(--f-display);font-stretch:80%;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.verdict p{margin:0;font-size:15px}
+.whynot{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.whynot li{font-size:14.5px;padding-left:12px;border-left:2px solid var(--rule)}
+.whynot li.mine{border-left-color:var(--bad)}
+.whynot b{font-family:var(--f-display);font-weight:600}
+.cite{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.btn{align-self:flex-start;font-family:var(--f-display);font-weight:700;font-size:14px;letter-spacing:.04em;text-transform:uppercase;background:var(--ink);color:var(--sheet);border:0;padding:11px 18px;cursor:pointer;border-radius:3px}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--ink)}
+.btn:disabled{opacity:.5;cursor:default}
+.intro{background:var(--sheet);border:1px solid var(--rule);padding:24px;display:flex;flex-direction:column;gap:14px}
+.intro h2{font-family:var(--f-display);font-stretch:110%;font-weight:800;font-size:26px;margin:0;text-wrap:balance}
+.intro p{margin:0;max-width:62ch}
+.rules3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0;padding:0;list-style:none}
+@media (max-width:620px){.rules3{grid-template-columns:minmax(0,1fr)}}
+.rules3 li{border-top:2px solid var(--ink);padding-top:8px;font-size:14.5px}
+.rules3 strong{display:block;font-family:var(--f-display);font-weight:700;font-size:15px}
+.lens{display:flex;gap:8px;flex-wrap:wrap}
+.len{font-family:var(--f-mono);font-weight:600;font-size:15px;min-width:56px;padding:9px 14px;border:1px solid var(--rule);background:var(--sheet);color:var(--ink);border-radius:3px;cursor:pointer}
+.len[aria-checked="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.len:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+label{font-family:var(--f-display);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.namerow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input[type=text]{font:inherit;font-size:16px;color:var(--ink);background:var(--paper);border:1px solid var(--rule);border-radius:3px;padding:10px 12px;min-width:0;flex:1 1 220px;max-width:340px}
+.note{font-size:13.5px;color:var(--muted);margin:0}
+.end{background:var(--sheet);border:1px solid var(--rule);padding:24px;display:flex;flex-direction:column;gap:16px}
+.end h2{font-family:var(--f-display);font-stretch:118%;font-weight:800;font-size:30px;margin:0}
+.grade{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:560px){.grade{grid-template-columns:minmax(0,1fr)}}
+.grade div{border-top:2px solid var(--ink);padding-top:8px}
+.grade span{display:block;font-family:var(--f-display);font-stretch:80%;font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:11px;color:var(--muted)}
+.grade b{font-family:var(--f-mono);font-size:22px;font-variant-numeric:tabular-nums}
+.missed{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:15px}
+.law{background:var(--paper);border:1px solid var(--rule);border-left:4px solid var(--accent);padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.law h4{margin:0}
+.law figure{margin:0}
+.law figcaption{font-family:var(--f-mono);font-size:12px;color:var(--muted);margin-bottom:4px}
+.law blockquote{margin:0;font-size:14.5px;line-height:1.6;font-style:italic}
+.review{margin-top:20px;background:var(--sheet);border:1px solid var(--rule);padding:22px;display:flex;flex-direction:column;gap:12px}
+.revhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px}
+.revhead h2{font-family:var(--f-display);font-weight:800;font-size:24px;margin:0}
+.revtools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{display:flex;border:1px solid var(--rule);border-radius:3px;overflow:hidden}
+.segb{font:inherit;font-family:var(--f-mono);font-size:12.5px;padding:7px 10px;background:var(--sheet);color:var(--muted);border:0;border-right:1px solid var(--rule);cursor:pointer}
+.segb:last-child{border-right:0}
+.segb[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+.segb:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.btn.small{padding:7px 12px;font-size:12px}
+.revlist{list-style:none;margin:0;padding:0;border-top:1px solid var(--rule)}
+.revitem{border-bottom:1px solid var(--rule)}
+.revitem summary{display:grid;grid-template-columns:34px 62px minmax(0,1fr);gap:4px 10px;align-items:baseline;padding:12px 4px;cursor:pointer;list-style:none}
+.revitem summary::-webkit-details-marker{display:none}
+.revitem summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.rnum{font-family:var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.rmark{font-family:var(--f-mono);font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;text-align:center;border:1px solid currentColor;border-radius:2px;padding:1px 4px}
+.rmark.ok{color:var(--ok)} .rmark.bad{color:var(--bad)}
+.rtitle{font-weight:600}
+.rmeta{grid-column:3;font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.rbody{padding:0 4px 16px 44px;display:flex;flex-direction:column;gap:10px}
+@media (max-width:560px){.rbody{padding-left:4px}.revitem summary{grid-template-columns:28px 56px minmax(0,1fr)}}
+.rq{margin:0;font-family:var(--f-display);font-weight:600}
+.ropts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.ro{display:grid;grid-template-columns:26px minmax(0,1fr);gap:8px;border:1px solid var(--rule);border-radius:3px;padding:8px 10px;font-size:14.5px}
+.ro .rk{font-family:var(--f-mono);color:var(--muted)}
+.ro em{display:inline-block;margin-left:8px;font-style:normal;font-family:var(--f-mono);font-size:11.5px;text-transform:uppercase;letter-spacing:.05em}
+.ro small{display:block;color:var(--muted);font-size:13px;margin-top:3px}
+.ro.ans{border-color:var(--ok);background:var(--ok-soft)} .ro.ans em{color:var(--ok)}
+.ro.pick{border-color:var(--bad);background:var(--bad-soft)} .ro.pick em{color:var(--bad)}
+.rwhy{margin:0;font-size:14.5px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{font-family:var(--f-mono);font-size:12px;padding:5px 9px;border:1px solid var(--rule);background:var(--sheet);color:var(--muted);border-radius:2px;cursor:pointer}
+.tab[aria-selected="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+aside.board{background:var(--sheet);border:1px solid var(--rule);padding:18px;display:flex;flex-direction:column;gap:12px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+@media (max-width:920px){aside.board{position:static}}
+aside h2{font-family:var(--f-display);font-weight:800;font-size:20px;margin:0;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+aside h2 small{font-family:var(--f-mono);font-weight:400;font-size:11px;color:var(--muted)}
+.table{list-style:none;margin:0;padding:0;border-top:1px solid var(--rule)}
+.table li{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:2px 10px;padding:9px 0;border-bottom:1px solid var(--rule);align-items:baseline}
+.table li.me{background:var(--accent-soft);margin:0 -8px;padding-left:8px;padding-right:8px}
+.table .rk{font-family:var(--f-mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.table .nm{font-weight:600;overflow-wrap:anywhere}
+.table .pts{font-family:var(--f-mono);font-weight:600;font-variant-numeric:tabular-nums}
+.table .sub{grid-column:2/-1;font-size:12.5px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.empty{font-size:14px;color:var(--muted);margin:0}
+footer{font-size:13px;color:var(--muted);border-top:1px solid var(--rule);padding-top:12px;max-width:80ch}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <h1>Custody Desk League</h1>
+      <p>FPI onboarding and monitoring calls, from Regular FPI to SWAGAT-FI and GS-FPI. Every right answer makes the next file harder.</p>
+    </div>
+    <div class="meters">
+      <div class="meter"><span>Points</span><b id="score">0</b></div>
+      <div class="meter"><span>Correct</span><b id="correct">0/0</b></div>
+      <div class="meter"><span>File</span><b id="count">–</b></div>
+    </div>
+  </header>
+  <div class="layout">
+    <section class="game" id="game"></section>
+    <aside class="board" aria-live="polite">
+      <h2>League table <small id="boardMeta">connecting…</small></h2>
+      <div class="tabs" role="tablist" aria-label="Round length" id="tabs"></div>
+      <ul class="table" id="table"></ul>
+      <p class="note" id="boardNote"></p>
+    </aside>
+  </div>
+  <footer>Questions come from a reviewed question bank covering Chapters II to VI and the Second Schedule of the SEBI (FPI) Regulations 2019, along with SEBI's FPI operational guidelines, the SWAGAT-FI circular of 16 January 2026 and the SWAGAT-FI SOP of 27 May 2026. Files marked <span class="chip sec">Verify</span> rely on secondary summaries of the GS-FPI circulars. Every entity is fictional. Rules as of October 2026.</footer>
+</div>
+
+<script>
+const LENGTHS=[10,15,20,25];
+const PTS={1:100,2:200,3:300};
+const LEVEL={1:"Easy",2:"Medium",3:"Hard"};
+const SEC="secondary";
+let CASES=[
+{m:"Regular FPI",d:1,ref:"ONB/ELG/101",title:"Home regulator outside IOSCO",
+ facts:[["Applicant","Halden Value Fund, a regulated fund"],["Home regulator","Not an IOSCO MMoU (Appendix A) signatory, and no bilateral MoU with SEBI"],["Set up in","Its home country, not an IFSC"],["Requested","Category II"]],
+ q:"Can the DDP register it?",
+ opts:["Yes, as Category II","No. It fails the home-regulator test in Reg 4(d)","Yes, if its manager is from a FATF member country","Yes, as Category I, because it is regulated"],ans:1,
+ why:"Reg 4(d) requires the applicant to be resident in a country whose securities regulator has signed the IOSCO MMoU (Appendix A) or has a bilateral MoU with SEBI. The two exceptions are a government investor from a country approved by the Government of India, and an applicant set up in an IFSC.",
+ no:["Choosing a category doesn't cure eligibility. Reg 4 applies to every category, so Category II is still blocked.",null,"The FATF-manager test only helps an applicant get into Category I under Reg 5. It doesn't override Reg 4(d).","Being regulated affects the category, but the applicant has to pass Reg 4(d) first."],
+ cite:"FPI Regs 2019, Reg 4(d) and proviso; Op. Guidelines Part A 2(i)"},
+{m:"Regular FPI",d:2,ref:"ONB/CAT/102",title:"Bank whose central bank isn't in the BIS",
+ facts:[["Applicant","Commercial bank, licensed by its home banking regulator"],["Home central bank","Not a member of the Bank for International Settlements"],["India presence","None"],["Requested","Category I, as a regulated bank"]],
+ q:"Where does this applicant land?",
+ opts:["Category I, as a bank regulated by its home banking regulator","Category II, which the guidelines allow for such banks","Not eligible in any category, because of the BIS test","Category I, once RBI approves the application"],ans:1,
+ why:"A bank applicant is expected to come from a country whose central bank is a BIS member (Reg 4(e)). The guidelines let a bank regulated at home whose central bank isn't a BIS member seek registration under Category II instead.",
+ no:["Category I for a bank assumes its central bank is a BIS member, which isn't the case here.",null,"Too strict. The guidelines expressly let this bank apply under Category II.","No RBI approval converts this into Category I. RBI is consulted only for banks with an Indian presence."],
+ cite:"FPI Regs 2019, Reg 4(e); Op. Guidelines Part A 3(i)"},
+{m:"Regular FPI",d:2,ref:"ONB/BNK/103",title:"Foreign bank with an Indian branch",
+ facts:[["Applicant","Proprietary investment arm of a European bank"],["Group in India","The bank has a branch in Mumbai"],["Requested","Category I"],["Documents","Complete"]],
+ q:"What extra step applies before you register it?",
+ opts:["None. Process it like any other Category I bank","Send it to SEBI first, which gets RBI's comments","Ask the applicant to get RBI's approval directly","Register it now, then tell RBI within 7 working days of approval"],ans:1,
+ why:"When the applicant or its group entity is a bank with a branch or representative office in India, or is a central bank, the DDP sends the form to SEBI. SEBI asks RBI for comments and passes them to the DDP to consider. This isn't repeated at continuance.",
+ no:["The Indian branch triggers a reference to SEBI and RBI. Skipping it is a process breach.",null,"The DDP routes the form through SEBI. The applicant doesn't go to RBI itself.","RBI's comments come before registration, not after it."],
+ cite:"Op. Guidelines Part A 3(i)"},
+{m:"Regular FPI",d:2,ref:"ONB/CAT/104",title:"Unregulated Luxembourg partnership",
+ facts:[["Applicant","Lindqvist Credit SCSp, Luxembourg"],["Fund status","Unregulated limited partnership"],["Manager","Luxembourg AIFM, appropriately regulated, registered with SEBI as a Category I FPI"],["Undertaking","Manager accepts responsibility for the fund's acts and omissions"]],
+ q:"Which category?",
+ opts:["Category I","Category II, because the fund itself is unregulated","Not eligible","Category II until the fund is regulated"],ans:0,
+ why:"Under Reg 5(a)(iv)(II), an unregulated fund from a FATF member country is Category I when its manager is appropriately regulated, is registered as a Category I FPI, and takes responsibility for the fund's acts and omissions. Luxembourg is a FATF member.",
+ no:[null,"Reg 5(a)(iv)(II) lets an unregulated fund from a FATF country take Category I through a regulated Category I manager.","Unregulated funds can register. Reg 5(b)(viii) even lists them under Category II.","Category I is available now, without the fund being regulated."],
+ cite:"FPI Regs 2019, Reg 5(a)(iv)(II)"},
+{m:"Regular FPI",d:3,ref:"ONB/CAT/105",title:"Cayman fund, New York manager",
+ facts:[["Applicant","Halcyon Opportunities Fund Ltd, Cayman Islands"],["Fund status","Unregulated"],["Manager","New York adviser, registered with SEBI as a Category I FPI"],["Undertaking","Manager accepts responsibility for the fund"]],
+ q:"Which category?",
+ opts:["Category II, because Cayman isn't a FATF member","Category I, under Reg 5(a)(v)(A)","Not eligible","Category I only if Cayman regulates the fund"],ans:1,
+ why:"Reg 5(a)(v)(A) looks at the manager, not where the fund sits. An entity whose manager is from a FATF member country and is registered as a Category I FPI qualifies for Category I, provided the manager takes responsibility. Without that registration and undertaking, the fund would fall to Category II.",
+ no:["That would be right under Reg 5(a)(iv), which looks at the fund's country. Reg 5(a)(v)(A) looks at the manager's.",null,"Nothing here fails the Reg 4 eligibility tests, and unregulated funds can register.","The fund doesn't need to be regulated. The manager route gives Category I."],
+ cite:"FPI Regs 2019, Reg 5(a)(v)(A) and proviso"},
+{m:"Regular FPI",d:3,ref:"ONB/NRI/106",title:"NRI general partner runs the fund",
+ facts:[["Applicant","Meridian Growth Fund LP, Delaware"],["Largest NRI","20% of the corpus"],["All NRI/OCI/RI","45% of the corpus"],["Control","An NRI is the general partner. The manager isn't registered with SEBI."]],
+ q:"Is the applicant eligible?",
+ opts:["Yes. Both percentages are inside the limits","No. NRIs can't be in control of the applicant","Yes, but only if it registers as a Category II FPI instead","No. Total NRI money has to stay under 25%"],ans:1,
+ why:"Three tests apply: each NRI, OCI or RI below 25%, all of them together below 50%, and none of them in control. The control test has carve-outs: an offshore fund with a SEBI NOC under the Mutual Fund Regulations, or a manager controlled by NRIs that is regulated at home and registered with SEBI as a non-investing FPI, or set up and registered in India. None applies here.",
+ no:["The percentages pass, but the control test fails. All three tests have to be met.",null,"The control test is an eligibility condition, so changing the category doesn't fix it.","25% is the cap for a single NRI, OCI or RI. The cap on all of them together is below 50%."],
+ cite:"FPI Regs 2019, Reg 4(c); Op. Guidelines Part A 2(ii)(a)–(d)"},
+{m:"Regular FPI",d:3,ref:"MON/NRI/107",title:"Redemptions push NRI share over 50%",
+ facts:[["Holder","Existing Category II FPI"],["Event","Other investors redeem; NRI/OCI share rises to 53%"],["Breach date","1 July 2026"],["Status on 15 July","Still 53%"]],
+ q:"What timeline applies?",
+ opts:["Sell all Indian holdings within 5 trading days of the breach","90 days to fix it, then a purchase block and a 180-day exit","No action needed, because a passive breach doesn't count","Stop all trading today and report the breach to SEBI"],ans:1,
+ why:"A temporary breach of the NRI/OCI/RI limits gives the FPI 90 days to comply again. If it is still in breach after 90 days, it can't make fresh purchases and must sell its positions within the following 180 days.",
+ no:["5 trading days is the timeline for breaching an investment limit, not for breaching the investor-mix limits.",null,"A temporary breach still counts. The 90-day period exists to fix exactly this.","Nothing is blocked on day one. The FPI gets 90 days to comply first."],
+ cite:"Op. Guidelines Part A 2(ii)(f)"},
+{m:"Regular FPI",d:1,ref:"MON/LIM/108",title:"Two sister FPIs cross 10% together",
+ facts:[["FPI A","Holds 6.2% of Company X"],["FPI B","Holds 3.5% of Company X"],["Link","Same parent owns 60% of both"],["Today","FPI B buys another 0.6%"]],
+ q:"What's the position?",
+ opts:["Fine. Each FPI is below 10% on its own, so no breach","Breach. Sell the excess in 5 trading days or it all becomes FDI","Fine, as long as the aggregate FPI limit still has room","Breach, and the exchange reverses B's new purchase to cure it"],ans:1,
+ why:"Common ownership above 50%, or common control, puts FPIs in one investor group, and their holdings count together against the below-10% limit on a fully diluted basis. If the excess isn't sold within 5 trading days of settlement, the group's entire investment in the company is treated as FDI, and it can't make further portfolio investment in that company.",
+ no:["Common ownership above 50% makes them one investor group, so the limit applies to the combined 10.3%.",null,"The aggregate FPI limit is a separate cap at company level. The 10% group limit still applies.","Exchange trades aren't reversed. The fix is to sell down within 5 trading days, or the holding turns into FDI."],
+ cite:"FPI Regs 2019, Reg 20(7), Reg 22(3)"},
+{m:"Regular FPI",d:3,ref:"MON/LIM/109",title:"Two UCITS under one management company",
+ facts:[["FPI A","Luxembourg UCITS, holds 6% of Company Y"],["FPI B","Irish UCITS, holds 5% of Company Y"],["Link","Same management company (common control); no common ownership above 50%"],["Both","Open to retail investors"]],
+ q:"Are they combined for the 10% limit?",
+ opts:["Yes. Common control makes them one investor group","No. That rule doesn't apply to regulated public retail funds","Yes, unless SEBI grants these two funds a specific exemption order","No, because they are domiciled in different countries"],ans:1,
+ why:"Reg 22(4) switches off the common-control rule where the FPIs are appropriately regulated public retail funds, or retail funds with regulated managers. The relief covers common control only. If they also shared more than 50% ownership, they would still be combined.",
+ no:["Normally yes, but Reg 22(4) switches off the common-control rule for appropriately regulated public retail funds.",null,"The exemption is written into Reg 22(4) itself. No SEBI order is needed.","Country doesn't decide investor groups. Ownership and control do."],
+ cite:"FPI Regs 2019, Reg 22(4)"},
+{m:"Regular FPI",d:2,ref:"MON/CHG/110",title:"Ownership change reported eight months late",
+ facts:[["FPI","Category I fund managed by an asset manager"],["Event","New parent bought 70% of the asset manager on 10 January 2026"],["Told DDP","15 September 2026"],["Category impact","Not yet assessed"]],
+ q:"What does the DDP do?",
+ opts:["Update the records. Late reporting has no consequence","Re-assess eligibility and report the delay to SEBI","Cancel the registration for the late intimation","Block the account permanently for the breach"],ans:1,
+ why:"Any direct or indirect change in structure, ownership or control must be reported within 7 working days. The DDP has to re-assess eligibility. Where the FPI was more than six months late, the DDP must report the case to SEBI with the reason.",
+ no:["A delay over six months has to go to SEBI, and the change itself needs an eligibility check.",null,"DDPs don't cancel registrations. That is SEBI's decision under the Intermediaries Regulations.","There's no automatic permanent block. The DDP re-assesses eligibility and escalates the delay."],
+ cite:"FPI Regs 2019, Reg 22(1)(c), Reg 31(2)(e); Op. Guidelines Part A 15"},
+{m:"Regular FPI",d:1,ref:"MON/CHG/111",title:"Fund moves from Dublin to Luxembourg",
+ facts:[["FPI","Ireland-domiciled fund"],["Event","Redomiciled to Luxembourg"],["Request","Change the country on the existing registration"],["Holdings","Listed Indian equity"]],
+ q:"Can the DDP make the change?",
+ opts:["Yes. Update the registration and its country code","No. It needs a new FPI registration","Yes, but only with SEBI's prior written approval","Yes, because both countries are FATF members"],ans:1,
+ why:"The DDP re-assesses most material changes, but it can't process a change in the FPI's jurisdiction. The FPI has to apply for a new registration.",
+ no:["The guidelines specifically bar DDPs from processing a change of jurisdiction.",null,"There's no SEBI approval route for this. A fresh registration is the only option.","FATF membership is irrelevant here. A change of jurisdiction can't be processed on an existing registration at all."],
+ cite:"Op. Guidelines Part A 15(ii)"},
+{m:"Regular FPI",d:2,ref:"MON/REN/112",title:"Renewal fee paid seven weeks late",
+ facts:[["FPI","Category II fund"],["Fees paid up to","31 August 2026"],["Today","20 October 2026"],["Request","Take the fee now and continue the registration"]],
+ q:"What do you tell the client?",
+ opts:["Fine. Accept the fee with a written reason for the delay","Not possible. Surrender, then file a fresh application","Allowed, since it's still within 90 days of expiry","Allowed, but only with SEBI's specific permission"],ans:1,
+ why:"A registration stops being valid after the date fees were paid up to, and continuance can't be applied for after expiry. The entity must surrender and apply fresh. Fees and updates should reach the DDP at least 15 days before validity ends.",
+ no:["A reason for delay covers renewal papers that arrive late but before expiry. After expiry, continuance isn't possible.",null,"There's no 90-day grace period after expiry.","The guidelines give no SEBI permission route. It has to surrender and reapply."],
+ cite:"Op. Guidelines Part A 5(iii)–(vi); FPI Regs 2019, Reg 9(3)"},
+{m:"Regular FPI",d:2,ref:"ONB/CLT/113",title:"Broker investing for its clients",
+ facts:[["Applicant","Singapore-licensed broker-dealer"],["Registration sought","Category II, to invest client money"],["Proposed clients","Two individuals, one family office, one trading company"],["Client KYC","Done to Singapore standards"]],
+ q:"Can all four clients invest through this registration?",
+ opts:["Yes. All four would be eligible as FPIs on their own","No. The trading company can't be a client","Yes, if the broker also holds a Category I registration","No. Brokers can't invest on behalf of clients at all"],ans:1,
+ why:"Regulated entities can invest for clients as Category II FPIs, but those clients must be individuals or family offices, must themselves be eligible as FPIs, and can't act for third parties. Client details go to the DDP every quarter.",
+ no:["Being FPI-eligible is necessary but not enough. The client also has to be an individual or a family office.",null,"A Category I registration covers the broker's own money. It doesn't widen who the client registration can serve.","Regulated entities, brokers included, can invest for clients through a Category II registration."],
+ cite:"FPI Regs 2019, Reg 5(b)(vii); Op. Guidelines Part A 3(iv)"},
+{m:"Regular FPI",d:2,ref:"MON/AML/114",title:"Major investor added to UN sanctions list",
+ facts:[["FPI","Category II fund"],["Event","An investor holding 30% of the corpus is added to the UN Security Council Sanctions List"],["Pending","A sell order on Indian holdings"],["Home country","Unchanged, compliant"]],
+ q:"What do you do?",
+ opts:["Block new buys but let the pending sell go through","Block all buying and selling, and notify SEBI","Allow trading normally until SEBI writes in","Freeze only that investor's share of the fund"],ans:1,
+ why:"If the FPI or a material underlying investor comes under UNSC sanctions, the custodian must stop all further buying and selling in the account and notify SEBI immediately.",
+ no:["Allowing sales is the rule when a home country loses compliant status. Sanctions block selling too.",null,"The custodian acts first and then notifies SEBI. It doesn't wait to hear back.","The block covers the whole FPI account, not one investor's share."],
+ cite:"FPI Regs 2019, Reg 4(f); Op. Guidelines Part A 16(i)"},
+{m:"Regular FPI",d:1,ref:"MON/JUR/115",title:"Home country put on the FATF high-risk list",
+ facts:[["FPI","Category I fund"],["Event","Home country listed in FATF's public statement as high-risk"],["Holdings","Listed equity and G-Secs"],["Fund itself","No adverse findings"]],
+ q:"What changes for this FPI?",
+ opts:["It must sell everything within 180 days","No fresh purchases; it may hold or sell","The registration is cancelled by the DDP","Nothing changes until the next renewal"],ans:1,
+ why:"When a jurisdiction stops being compliant (it leaves IOSCO, a SEBI MoU or the BIS, or FATF names it high-risk), the custodian blocks fresh purchases. The FPI may keep or sell what it holds, and the DDP reports the affected FPIs to SEBI.",
+ no:["There's no forced sale. The FPI can keep or sell its holdings.",null,"The registration isn't cancelled. Fresh purchases are blocked until the jurisdiction is compliant again.","The custodian acts as soon as the status changes, not at renewal."],
+ cite:"Op. Guidelines Part A 16(i)"},
+{m:"Regular FPI",d:2,ref:"ONB/REJ/116",title:"Rejected for missing papers",
+ facts:[["Applicant","Category II corporate body"],["Rejected by","DDP A, for incomplete documents and unpaid fee"],["Client wants to","Appeal to SEBI"],["Days since rejection","12"]],
+ q:"What's the right route?",
+ opts:["Ask SEBI to reconsider within 30 days","Fix the gaps and reapply, with any DDP","Wait six months before reapplying anywhere","Reapply only through DDP A, which rejected it"],ans:1,
+ why:"An applicant can ask SEBI to reconsider within 30 days, but not when the rejection was technical: missing information or documents, or unpaid fees. Another DDP can take the application once it has checked why it was rejected and confirmed the gaps are fixed.",
+ no:["The 30-day reconsideration route exists, but Reg 8(3) excludes technical rejections like missing documents or fees.",null,"There's no waiting period. It can reapply as soon as the gaps are fixed.","Any DDP can take it, after checking the rejection reason in the depositories' shared database."],
+ cite:"FPI Regs 2019, Reg 8(3); Op. Guidelines Part A 7"},
+{m:"Regular FPI",d:1,ref:"MON/INV/117",title:"30% of a Category III AIF",
+ facts:[["FPI","Category I pension fund"],["Proposal","Subscribe to 30% of a SEBI-registered Category III AIF"],["Other holdings","Listed equity"],["AIF","Domestic, open to FPIs"]],
+ q:"Can it take the full 30%?",
+ opts:["Yes. Category III AIF units are permitted for FPIs","No. An FPI can't hold more than 25% in a Category III AIF","Only with RBI's prior approval for the stake above 25%","Only Category II FPIs can invest in AIFs"],ans:1,
+ why:"FPIs can invest in units of Category III AIFs, REITs and InvITs, but a single FPI can't hold more than 25% of a Category III AIF.",
+ no:["They are permitted, but capped at 25% of any one AIF.",null,"No RBI approval lifts the 25% cap.","Both categories can invest in Category III AIF units."],
+ cite:"FPI Regs 2019, Reg 20(1)(e); Op. Guidelines Part C 14"},
+{m:"Regular FPI",d:1,ref:"MON/ODI/118",title:"Category II fund wants to issue P-notes",
+ facts:[["FPI","Category II unregulated trust"],["Plan","Issue offshore derivative instruments on Indian equity"],["Subscribers","Mix of institutions and wealthy individuals"],["Hedge","Cash equity held in India"]],
+ q:"Can it issue these ODIs?",
+ opts:["Yes, as long as it reports them to SEBI monthly","No. Only Category I FPIs can issue ODIs","Yes, through a separate ODI-suffixed registration","Yes, but only to institutional subscribers"],ans:1,
+ why:"Only Category I FPIs can issue ODIs, only to persons eligible for Category I registration, and only after KYC on the subscribers.",
+ no:["Monthly reporting is a duty of eligible issuers. It doesn't make a Category II FPI eligible.",null,"A separate registration with an \"ODI\" suffix keeps a Category I issuer's derivatives apart. It doesn't let a Category II FPI issue.","The issuer must be Category I, whoever the subscribers are."],
+ cite:"FPI Regs 2019, Reg 21(1)"},
+{m:"Regular FPI",d:2,ref:"EXT/SUR/119",title:"Surrender with stranded delisted shares",
+ facts:[["FPI","Category II fund winding up"],["Holdings","Delisted shares it can't sell on exchange"],["Bank account","Nil balance"],["Request","Surrender the registration now"]],
+ q:"What has to happen first?",
+ opts:["Nothing. Residual shares don't block a surrender","Get holdings to nil, by off-market sale or write-off","Transfer the stranded shares to the custodian","Wait for SEBI to cancel the registration on its own initiative"],ans:1,
+ why:"The DDP asks SEBI for a no-objection certificate only after confirming nil securities, nil bank balance and nil open derivatives. Delisted shares can be sold off-market under FEMA pricing. If that fails, an FPI that intends to surrender can write them off, reported as a sale with nil proceeds.",
+ no:["The DDP seeks SEBI's no-objection certificate only after confirming nil holdings.",null,"The custodian doesn't take the shares. A write-off removes them from its books and freezes the demat account.","Surrender is a request through the DDP with SEBI's no-objection certificate. Nothing happens automatically."],
+ cite:"Op. Guidelines Part A 11; Part C 3(iii) and 17"},
+{m:"Regular FPI",d:1,ref:"MON/INV/120",title:"FPI wants shares in an unlisted company",
+ facts:[["FPI","Category I UK pension fund"],["Target","Unlisted Indian fintech"],["Deal","Buy 4% from existing shareholders"],["Request","Book it through the FPI account"]],
+ q:"Can this go through the FPI route?",
+ opts:["Yes, because it's well under the 10% limit","No. Buying unlisted equity is FDI","Yes, but only with SEBI's prior approval","Yes, if it's booked as an off-market transfer"],ans:1,
+ why:"The FPI route covers shares of companies that are listed, or about to be listed, on an Indian exchange. Buying shares in an unlisted company is foreign direct investment under FEMA.",
+ no:["The 10% limit only matters for securities an FPI is allowed to buy, and unlisted equity isn't one of them.",null,"No SEBI approval brings unlisted equity into the FPI route.","Off-market sales of unlisted shares are allowed for getting out, at FEMA pricing, not for buying in."],
+ cite:"FPI Regs 2019, Reg 20(1)(a); Op. Guidelines Part C 4"},
+{m:"SWAGAT-FI",d:1,ref:"SWG/ELG/201",title:"Luxembourg UCITS applies for SWAGAT",
+ facts:[["Applicant","Aurelia Global Equity, a Luxembourg SICAV authorised by the CSSF"],["Investors","Retail; no accredited-investor condition"],["Portfolio","Common pool, diversified"],["Manager","Independent management company"]],
+ q:"Can it be tagged SWAGAT-FI?",
+ opts:["Yes, as a public retail fund","No. Only government investors can qualify","Only after three years as a regular FPI","No. UCITS have to stay in Category II"],ans:0,
+ why:"A retail fund qualifies if it is open to retail investors, runs as a blind pool with diversified investors and investments, has contributors without day-to-day control and an independent manager, and comes from a jurisdiction named in the SOP. Luxembourg UCITS are on the list.",
+ no:[null,"Four types qualify: government investors, retail mutual funds, insurers and pension funds.","There's no waiting period. Eligible applicants can opt in when they first register.","UCITS are often Category I anyway, and the SWAGAT letter is open to Category I and II FPIs alike."],
+ cite:"SEBI circular 16 Jan 2026, para 3.2 (vi)(I)–(II); SWAGAT SOP 27 May 2026, Annex B"},
+{m:"SWAGAT-FI",d:2,ref:"SWG/ELG/202",title:"Irish AIF sold only to qualified investors",
+ facts:[["Applicant","Irish AIF authorised by the Central Bank of Ireland"],["Marketing","Qualified investors only, as noted on the Central Bank register"],["Portfolio","Diversified"],["Current status","Category I FPI"]],
+ q:"Does it qualify for SWAGAT-FI?",
+ opts:["Yes. It's regulated and based in a FATF member country","No. A qualified-investor fund isn't a public retail fund","Yes, as long as it gives a signed declaration to the DDP","Yes, because it's already registered with SEBI as a Category I FPI"],ans:1,
+ why:"The SOP says an Irish AIF marketed to qualified investors, as shown on the Central Bank of Ireland register, is not a public retail fund. It stays a regular FPI.",
+ no:["Being regulated in a FATF country earns Category I. SWAGAT also needs the fund to be open to retail investors.",null,"The DDP can't rely on a declaration, and here the regulator's register says the opposite.","Category I status doesn't make it a public retail fund."],
+ cite:"SWAGAT SOP 27 May 2026, Annex B (Ireland)"},
+{m:"SWAGAT-FI",d:2,ref:"SWG/ELG/203",title:"Insurer with unit-linked sleeves",
+ facts:[["Applicant","Regulated life insurer"],["India money","Own funds, plus unit-linked portfolios each tied to a single policyholder"],["Home regulator","Insurance supervisor in a permitted jurisdiction"],["Requested","SWAGAT-FI"]],
+ q:"Is it eligible?",
+ opts:["Yes. Regulated insurers always qualify","No. The segregated portfolios rule it out","Yes, by applying as a pension fund instead","Yes, if unit-linked money is under 50%"],ans:1,
+ why:"The insurance route covers an appropriately regulated insurer investing its own funds without segregated portfolios, and the insurer has to show evidence of that. Portfolios each tied to one policyholder fail the test.",
+ no:["Only insurers investing their own funds, with no segregated portfolios, qualify.",null,"An insurer isn't a pension fund, and a different label doesn't remove the segregated portfolios.","There's no percentage threshold. Any segregated portfolio fails the test."],
+ cite:"SEBI circular 16 Jan 2026, para 3.2 (vi)(I)(c); SWAGAT SOP, section 8"},
+{m:"SWAGAT-FI",d:3,ref:"SWG/ELG/204",title:"Manager's own seed money in the fund",
+ facts:[["Applicant","Singapore authorised collective investment scheme, retail"],["Manager stake","4%, seeded as skin in the game"],["Manager","Same group as the fund's sponsor"],["Other investors","Diversified retail"]],
+ q:"Does either fact block SWAGAT-FI?",
+ opts:["Yes. The manager is a contributor, so the manager isn't independent","No. Skin-in-the-game money and a same-group manager are both allowed","Yes. The manager must come from outside the sponsor's group to be independent","Only if the stake exceeds 2%"],ans:1,
+ why:"The SOP clarifies that the test of contributors not controlling the fund ignores a manager's skin-in-the-game money. And the independence test doesn't stop a manager from the FPI's own group from managing or controlling the fund.",
+ no:["The SOP leaves skin-in-the-game money out of the control and independence tests.",null,"The SOP says a manager from the same group doesn't breach independence.","The SOP sets no percentage threshold for skin in the game."],
+ cite:"SWAGAT SOP 27 May 2026, section 3 B.1(b)–(c)"},
+{m:"SWAGAT-FI",d:2,ref:"SWG/CNV/205",title:"Sovereign fund converts to SWAGAT",
+ facts:[["FPI","Category I sovereign wealth fund, registered under Reg 5(a)(i) in 2021"],["Next renewal","March 2027"],["Request","Convert to SWAGAT-FI"],["Changes","None"]],
+ q:"What does it need to submit and pay?",
+ opts:["A fresh KYC pack for the DDP, plus the US$2,500 SWAGAT fee","A declaration of intent only, with no fee now","A full re-registration with the DDP","A one-time conversion fee of US$250"],ans:1,
+ why:"An FPI already registered as a government or government-related investor only declares its intent, using the SWAGAT requisition letter, with no further documents. No fee is due on transition. SEBI fees fall due at the next renewal after a 10-year block.",
+ no:["A government investor that's already registered needs no further documents, and no fee is due at transition.",null,"Converting is an application to the existing DDP, not a new registration.","There's no conversion fee. US$250 is the regular Category II registration fee."],
+ cite:"SWAGAT SOP, section 3 A.2 and B.6(a), section 8 row 1"},
+{m:"SWAGAT-FI",d:3,ref:"SWG/FEE/206",title:"New applicant wants FPI and FVCI",
+ facts:[["Applicant","Regulated pension fund, new to India"],["Wants","SWAGAT-FI FPI and SWAGAT-FI FVCI"],["PAN","One PAN for the entity"],["Question","Upfront SEBI fee"]],
+ q:"What is the fresh registration fee?",
+ opts:["US$2,500 for 3 years","US$5,000, covering 10 years","US$2,600, covering 10 years","US$2,500 every year"],ans:1,
+ why:"A SWAGAT-FI pays for 10 years in advance: US$2,500 for FPI only, US$2,500 for FVCI only, or US$5,000 for both, plus taxes. Renewal is US$2,500, US$100 or US$2,600.",
+ no:["US$2,500 per 3 years is the regular Category I fee. SWAGAT fees cover 10 years, and this applicant wants both registrations.",null,"US$2,600 is the renewal fee for both, not the fresh fee.","SWAGAT fees are paid once for the 10-year block, not every year."],
+ cite:"SWAGAT SOP 27 May 2026, section 3 B.5"},
+{m:"SWAGAT-FI",d:1,ref:"SWG/KYC/207",title:"Custodian diary shows a 2029 KYC review",
+ facts:[["FPI","SWAGAT-FI pension fund, registered June 2026"],["Custodian diary","KYC review: June 2029"],["Risk rating","Low"],["Custodian policy","No special rule"]],
+ q:"Is the 2029 date right?",
+ opts:["Yes. KYC review is every 3 years for every FPI","No. The default for SWAGAT-FIs is every 10 years","No. Once tagged SWAGAT-FI, it never needs a KYC review again","Yes, but only because it's a pension fund"],ans:1,
+ why:"For SWAGAT-FIs, both continuance and KYC review move to a 10-year cycle. The SOP leaves room for a different period set by RBI, for RBI-regulated entities, or by the DDP's own risk policy.",
+ no:["Three years is the usual cycle for regular, lower-risk FPIs. SWAGAT-FIs move to 10 years.",null,"The review still happens, every 10 years by default.","The 10-year cycle applies to every type of SWAGAT-FI, pension funds included."],
+ cite:"Circular 16 Jan 2026, paras 3.3–3.4; SWAGAT SOP, section 3 B.2"},
+{m:"SWAGAT-FI",d:3,ref:"SWG/NRI/208",title:"Resident Indian money in a SWAGAT fund",
+ facts:[["FPI","SWAGAT-FI retail fund"],["Largest NRI","30% of the corpus"],["Resident Indians","Individuals investing through LRS"],["Fund's India exposure","65%"]],
+ q:"Where's the problem?",
+ opts:["The NRI at 30%, which breaks the 25% single-investor cap","The resident Indian money, given 65% India exposure","Nothing. SWAGAT-FIs are exempt from all contributor rules","Both the NRI stake and the resident Indian money"],ans:1,
+ why:"The per-investor and combined NRI/OCI/RI caps don't apply to SWAGAT-FIs. But one condition stays: resident Indian individuals can only invest through LRS, and only in global funds whose India exposure is below 50%. At 65%, this fund fails.",
+ no:["The per-investor and combined caps are switched off for SWAGAT-FIs.",null,"The LRS condition for resident Indians still applies.","Only the resident Indian money fails. The NRI stake is fine."],
+ cite:"Circular 16 Jan 2026, para 3.1 (Master Circular Part A para 1(ii)(db))"},
+{m:"SWAGAT-FI",d:2,ref:"SWG/EVD/209",title:"US fund ticks every box itself",
+ facts:[["Applicant","US open-end mutual fund, SEC-registered"],["Submitted","SWAGAT letter with Yes for all five retail-fund conditions"],["Prospectus","Not provided"],["Request","Tag as SWAGAT-FI this week"]],
+ q:"Can the DDP approve on this?",
+ opts:["Yes. The applicant's own declaration is enough","No. The DDP needs evidence such as the prospectus","Yes, because SEC registration proves retail status","No. US funds can't be SWAGAT-FIs at all"],ans:1,
+ why:"Where the home rules don't show a condition, the applicant must provide a certificate from its regulator or its own documents, such as the prospectus, with the relevant clauses marked. The DDP can't rely on a declaration alone. For US funds the SOP marks openness to retail investors as To Be Verified.",
+ no:["The SOP specifically says the DDP can't rely on a mere declaration.",null,"SEC registration doesn't settle retail access. Some registered funds are sold only to accredited investors.","US funds are covered in the SOP's Annex B. They can qualify with evidence."],
+ cite:"SWAGAT SOP 27 May 2026, section 3 B.1(a); Annex B (USA)"},
+{m:"SWAGAT-FI",d:3,ref:"SWG/ELG/210",title:"Pension plan governed by statute only",
+ facts:[["Applicant","Retirement plan for state employees"],["Licensing","Not directly licensed by a regulator"],["Oversight","Set up under a statute that imposes supervision and compliance duties"],["Requested","SWAGAT-FI as a pension fund"]],
+ q:"Can it qualify?",
+ opts:["No. A pension fund must be directly licensed","Yes. Statutory oversight is enough","Only by registering as a Category II FPI","Only if it's 100% owned by the government"],ans:1,
+ why:"The SOP's pension route includes plans governed or recognised by a statutory, regulatory or tax authority. A plan that isn't directly licensed can still qualify if it operates under a law and is subject to that law's oversight and compliance duties.",
+ no:["The SOP expressly covers plans that aren't directly licensed but are overseen under a statute.",null,"The category doesn't decide SWAGAT eligibility, and pension funds are usually Category I anyway.","Government ownership is one way in. A plan governed by statute also qualifies as a pension fund."],
+ cite:"SWAGAT SOP 27 May 2026, section 8, row 4(iv); Annex C"},
+{m:"SWAGAT-FI",d:1,ref:"SWG/FVC/211",title:"SWAGAT FPI adds an FVCI licence",
+ facts:[["FPI","Registered SWAGAT-FI, a government-related investor"],["Request","Also register as an FVCI"],["Documents offered","Asks what extra papers are needed"],["FPI renewal","2036"]],
+ q:"What's needed?",
+ opts:["A full FVCI application with fresh KYC","No further documents; renewal dates align","A separate DDP for the FVCI registration","SEBI's approval under the FVCI Regulations"],ans:1,
+ why:"A SWAGAT-FI that holds or is applying for FPI registration can also register as an FVCI without further documentation. The FVCI renewal date lines up with the FPI's.",
+ no:["The SOP says a SWAGAT-FI can add FVCI without further documentation.",null,"The same DDP handles it, and the depositories keep one combined account.","No separate SEBI approval step is described. The DDP handles the registration."],
+ cite:"SWAGAT SOP, section 3 A.3 and B.6(b)"},
+{m:"GS-FPI",d:1,ref:"GSF/REN/301",title:"G-Sec-only fund comes up for renewal",
+ facts:[["FPI","Invests only in Government Securities"],["Event","3-year block ends next month"],["Changes since last block","None"],["Client asks","What do we send?"]],
+ q:"What does it need to continue?",
+ opts:["Only the renewal fee","The fee plus a no-change declaration","A full KYC refresh plus the fee","Nothing. GS-FPI registration is permanent"],ans:0,
+ why:"Under the amended Master Circular, FPIs continue by paying fees and reporting any changes. GS-FPIs only pay the fee; the duty to report changes at renewal doesn't apply to them.",
+ no:[null,"The no-change declaration applies to regular FPIs. GS-FPIs don't have to report changes at renewal.","For GS-FPIs, renewal is just the fee.","The fee is still due for every 3-year block."],
+ cite:"Circular 16 Jan 2026, para 3.3 (Master Circular Part A para 4(i))"},
+{m:"GS-FPI",d:2,ref:"GSF/ONB/302",title:"New G-Sec investor and its group details",
+ facts:[["Applicant","Fund investing only in G-Secs"],["Route","General route (not FAR)"],["Date","October 2026"],["Question","Do we need investor-group details?"]],
+ q:"What's the position now?",
+ opts:["Full investor-group details are still required","Not required, whatever the route","Only required for investors using FAR","Required, unless SEBI approves a waiver"],ans:1,t:SEC,
+ why:"The September 2025 circular exempted GS-FPIs investing under the Fully Accessible Route from giving investor-group details. Reports say a 7 September 2026 circular extended this to all FPIs investing only in G-Secs, after RBI dropped the general route's concentration limit. Check the circular itself before relying on this.",
+ no:["That was the rule for general-route investors before September 2026.",null,"It's the other way round: FAR investors were exempted first, in 2025.","The exemption comes from the circular itself. There's no case-by-case approval."],
+ cite:"SEBI circulars 10 Sep 2025 and 7 Sep 2026, as reported"},
+{m:"GS-FPI",d:2,ref:"GSF/CNV/303",title:"GS-FPI wants to buy listed equity",
+ facts:[["FPI","GS-FPI registered under the lighter regime"],["Plan","Start buying NSE-listed equity next week"],["On file","No investor-group details"],["Request","Just enable the equity account"]],
+ q:"What has to happen first?",
+ opts:["Nothing. Just enable equity trading on the account","Move to regular FPI status and file full details first","Open a second FPI registration just for the new equity book","Get RBI's approval for the change in investments"],ans:1,t:SEC,
+ why:"The GS-FPI relaxations depend on the FPI investing only in Government Securities. Before it invests in anything else, it has to meet the regular FPI requirements through its DDP, including the investor-group details needed to monitor the 10% limit. Confirm the exact steps in the September 2025 circular.",
+ no:["Equity needs the investor-group details GS-FPIs never filed, so the 10% limit can be monitored.",null,"The same registration moves to regular status. No second registration is needed.","This sits within SEBI's registration framework. RBI approval isn't the gate."],
+ cite:"SEBI circular 10 Sep 2025, as summarised by secondary sources"},
+{m:"GS-FPI",d:3,ref:"GSF/NRI/304",title:"NRI-heavy fund buying only G-Secs",
+ facts:[["FPI","GS-FPI"],["Largest NRI","35% of the corpus"],["Resident Indians","Individuals via LRS"],["Fund's India exposure","30%"]],
+ q:"Is there a contributor problem?",
+ opts:["Yes. The largest NRI is above the 25% cap","No. Both contributor conditions are met","Yes. Resident Indians can't invest in FPIs at all","Yes. Both of the contributor conditions fail"],ans:1,t:SEC,
+ why:"The SWAGAT circular adds sub-para (db) next to an existing (da) for GS-FPIs, and both follow the same pattern. The NRI/OCI/RI percentage caps don't apply, but resident Indian individuals can only invest through LRS, in global funds with India exposure below 50%. This fund passes. Check the wording of (da) in the September 2025 circular.",
+ no:["The percentage caps are relaxed for GS-FPIs.",null,"Resident Indian individuals can invest through LRS in funds with India exposure below 50%.","Neither condition fails here."],
+ cite:"Master Circular Part A para 1(ii)(da), as referenced in circular 16 Jan 2026"},
+
+/* ---------- Ch II: Registration of FPIs ---------- */
+{ch:"II",d:3,ref:"ONB/IFS/121",title:"GIFT City fund and the residency test",
+ facts:[["Applicant","Saffron Bridge Fund, a Category III AIF set up in GIFT IFSC and registered with IFSCA"],["DDP's concern","GIFT City is in India, so the applicant looks resident"],["Home-regulator check","IOSCO test not run"],["Requested","FPI registration"]],
+ q:"How should the DDP treat the residency and home-regulator tests?",
+ opts:["Reject it, since an Indian-resident entity can't be an FPI","Skip them, since Reg 4's proviso switches them off for IFSC","Register it as Category II only, since IFSCA isn't a foreign regulator","Ask SEBI for a one-off relaxation under Reg 43B"],ans:1,
+ why:"The proviso to Reg 4 says clauses (a), (d) and (e) don't apply to an applicant incorporated or set up in an IFSC. Those are the resident-Indian bar, the IOSCO or MoU jurisdiction test, and the BIS test for banks. The Explanation to Reg 5 also deems IFSC applicants appropriately regulated. The other tests, such as sanctions and fit and proper, still apply.",
+ no:["The residency bar in Reg 4(a) is one of the clauses the proviso switches off for IFSC applicants.",null,"IFSC applicants are deemed appropriately regulated, so they aren't pushed into Category II for that reason.","No relaxation is needed. The carve-out is already in the regulation."],
+ cite:"FPI Regs 2019, proviso to Reg 4; Explanation to Reg 5"},
+{ch:"II",d:3,ref:"ONB/IFS/122",title:"Indian sponsor's stake in a GIFT City fund",
+ facts:[["Applicant","Category II AIF in GIFT IFSC, regulated by IFSCA"],["Corpus","US$40 million"],["Sponsor","An Indian asset manager (a resident, not an individual)"],["Sponsor commitment","3% of the corpus, or US$1.2 million"]],
+ q:"Is the sponsor's contribution within limits?",
+ opts:["Yes. A resident Indian can hold up to 25%","No. The cap is the lower of 2.5% or US$750,000","Yes. Sponsors of IFSC funds have no cap","No. Resident non-individuals can never be constituents"],ans:1,
+ why:"Reg 4(c) lets a resident Indian non-individual contribute to an IFSC AIF as its sponsor or manager. For a Category I or II AIF the cap is the lower of 2.5% of corpus or US$750,000. For Category III it's the lower of 5% or US$1.5 million. Here 2.5% is US$1 million, so the US$750,000 limit applies, and US$1.2 million breaches it.",
+ no:["25% is the single-investor cap for NRIs, OCIs and resident Indian individuals, not for an Indian sponsor entity.",null,"There is a cap, set by the second proviso to Reg 4(c).","They can, in two cases: as the eligible fund manager of a Section 9A fund, or as the sponsor or manager of an IFSC AIF within the cap."],
+ cite:"FPI Regs 2019, Reg 4(c), first and second provisos"},
+{ch:"II",d:1,ref:"ONB/CAT/123",title:"Sovereign fund's 80%-owned subsidiary",
+ facts:[["Applicant","Kestrel Holdings, an investment company"],["Ownership","80% sovereign wealth fund, 20% a private bank"],["Regulated","No"],["Requested","Category I"]],
+ q:"Which category fits?",
+ opts:["Category I, as a government-related investor","Category II, as an unregulated corporate body","Category I, but only if 100% government owned","Not eligible, because it's partly private"],ans:0,
+ why:"Reg 5(a)(i) covers government and government-related investors. That includes entities they control, or own at least 75% of, directly or indirectly. 80% clears the test.",
+ no:[null,"Corporate bodies usually fall in Category II, but 75%+ government ownership moves this one into Category I.","The test is control or at least 75% ownership, not 100%.","Mixed ownership is fine as long as the 75% or control test is met."],
+ cite:"FPI Regs 2019, Reg 5(a)(i)"},
+{ch:"II",d:1,ref:"ONB/TAT/124",title:"How long can the DDP take?",
+ facts:[["Application received","2 March"],["DDP asked for more documents","10 March"],["Documents received","25 March"],["Client asks","When is the latest we get a decision?"]],
+ q:"By when must the DDP decide?",
+ opts:["30 days from 2 March","30 days from 25 March","7 working days from 25 March","There is no deadline"],ans:1,
+ why:"Under Reg 7(2), the DDP should decide as soon as possible. The latest is 30 days after it receives the application, or after the further information it asked for under Reg 6 arrives, whichever is later. Here that means 30 days from 25 March.",
+ no:["The clock runs from whichever date is later, and the requested documents arrived later.",null,"7 working days is the FPI's deadline for reporting changes, not the DDP's decision deadline.","Reg 7(2) sets a 30-day outer limit."],
+ cite:"FPI Regs 2019, Reg 6(1), Reg 7(2)"},
+{ch:"II",d:2,ref:"ONB/VAL/125",title:"Does the FPI certificate expire?",
+ facts:[["FPI","Category I pension fund, registered 2023"],["Client says","\"Our certificate expires in 2026, so we need a new one\""],["Fees","Paid for the current 3-year block"],["Certificate wording","Valid till suspended, cancelled or surrendered"]],
+ q:"What's correct?",
+ opts:["The certificate expires every three years and is reissued","It's permanent, but fees are due for every three-year block","It expires after 10 years","It's permanent and no further fees are due"],ans:1,
+ why:"Reg 9(1) makes registration permanent unless SEBI suspends or cancels it, or the FPI surrenders it. Separately, the Second Schedule makes fees payable for every three-year block, and a registration stops being valid beyond the period fees cover.",
+ no:["There's no reissue. The certificate stands, and the FPI pays continuance fees.",null,"10-year blocks apply only to SWAGAT-FIs.","Fees are still due every three years to keep the registration valid."],
+ cite:"FPI Regs 2019, Reg 9(1); First Schedule; Second Schedule Part A(2)"},
+{ch:"II",d:2,ref:"EXT/SUR/126",title:"Fee unpaid, account already empty",
+ facts:[["FPI","Category II fund that stopped investing"],["Holdings","No cash, securities or derivatives in India"],["Renewal fee","Not paid by the due date"],["Client","Not responding"]],
+ q:"What happens to the registration?",
+ opts:["It stays active indefinitely until the client responds","It's treated as surrendered, subject to SEBI's approval","The DDP cancels the registration on the due date","SEBI starts enforcement proceedings against it for non-payment"],ans:1,
+ why:"Under Reg 9(3), an FPI that doesn't pay continuance fees by the due date and has no cash, securities or derivatives in India is treated as having applied for surrender. The DDP processes the surrender after getting SEBI's approval.",
+ no:["Without the fee the registration stops being valid, and the rule treats it as surrendered.",null,"The DDP doesn't cancel registrations. It processes the surrender, and only with SEBI's approval.","Unpaid fees with nothing held are handled as a surrender, not as a violation."],
+ cite:"FPI Regs 2019, Reg 9(3)–(4)"},
+{ch:"II",d:2,ref:"ONB/CAT/127",title:"Category II fund now qualifies for Category I",
+ facts:[["FPI","Category II fund"],["Change","Its manager is now registered as a Category I FPI and has given an undertaking"],["Request","Move to Category I"],["Holdings","Listed equity"]],
+ q:"How does it move?",
+ opts:["Automatically. The DDP switches it over","It applies to its DDP and pays the fee","It surrenders and registers again from scratch","Only SEBI itself can recategorise an FPI"],ans:1,
+ why:"An FPI that wants to move from Category II to Category I applies to its DDP with the required information and documents, and pays the applicable fee. The DDP recategorises the existing registration on SEBI's behalf.",
+ no:["There's no automatic upgrade. The FPI has to request it.",null,"No surrender is needed. The existing registration is recategorised.","The DDP handles recategorisation on SEBI's behalf."],
+ cite:"Op. Guidelines Part A 1; FPI Regs 2019, Reg 5"},
+{ch:"II",d:3,ref:"MON/CAT/128",title:"Category I fund loses its regulated status",
+ facts:[["FPI","Category I regulated fund"],["Event","Its home licence lapses, so it's no longer appropriately regulated"],["Now fits","Category II"],["Holdings","Listed equity"]],
+ q:"What's the process?",
+ opts:["Nothing changes until its next renewal","Fresh buys are blocked until extra KYC; sales allowed","It must sell all its Indian holdings within 5 trading days","The DDP cancels the registration"],ans:1,
+ why:"An FPI that stops meeting its category's requirements must promptly tell its DDP so it can be reclassified, and may need to provide extra KYC. The custodian blocks fresh purchases until that's done, but the FPI can keep selling. If it still holds securities 180 days after the block, it's referred to SEBI.",
+ no:["Reclassification is prompt, not deferred to renewal.",null,"There's no forced sale. Selling stays open during the block.","It's reclassified, not cancelled."],
+ cite:"Op. Guidelines Part A 14; FPI Regs 2019, Reg 22(1)(c)"},
+
+/* ---------- Ch III: Approval of DDPs ---------- */
+{ch:"III",d:3,ref:"DDP/APP/131",title:"Custodian that isn't an AD Category-1 bank",
+ facts:[["Applicant","Indian custody firm seeking DDP approval"],["Registered as","Depository participant and custodian with SEBI"],["Banking status","Not an AD Category-1 bank"],["Experience","15 years of custody for foreign clients"]],
+ q:"Can SEBI approve it as a DDP?",
+ opts:["No. Reg 11(1) requires AD Category-1 status, full stop","Possibly, under Reg 11(2), with an AD Category-1 tie-up","Yes. DP and custodian registration with SEBI is enough on its own","Yes, as long as NSDL recommends the application"],ans:1,
+ why:"Reg 11(1) sets the standard tests: registered DP, registered custodian, AD Category-1 bank, multinational presence, anti-money-laundering systems, and fit and proper. Reg 11(2) lets SEBI consider an entity with enough custody experience where approval helps develop the market. The entity must be registered as a participant and custodian and have a tie-up with an AD Category-1 bank.",
+ no:["Reg 11(2) is an express exception to Reg 11(1).",null,"Under Reg 11(1) it would also need AD Category-1 status. Without that, only the Reg 11(2) route is open.","The depository forwards the application with its recommendation, but SEBI decides on the regulation's tests."],
+ cite:"FPI Regs 2019, Reg 11(1)–(2)"},
+{ch:"III",d:2,ref:"DDP/APP/132",title:"Filing a DDP application",
+ facts:[["Applicant","Bank that is an NSDL participant, a SEBI custodian and an AD Category-1 bank"],["Wants","Approval as a DDP"],["Question","Where to file and what to pay up front"],["Status","Systems ready"]],
+ q:"What's the right route?",
+ opts:["File directly with SEBI and pay ₹5,00,000","File through NSDL with a ₹10,000 application fee","File with RBI, which consults SEBI","File through an existing DDP, which sponsors it"],ans:1,
+ why:"Under Reg 10(2)–(3), the application goes through the depository the applicant is a participant of, with a ₹10,000 application fee. The depository certifies eligibility and forwards it to SEBI within 30 days with its recommendation. The ₹5,00,000 approval fee is due when SEBI grants approval.",
+ no:["₹5,00,000 is the approval fee, paid when approval is granted, and the application goes through the depository.",null,"DDP approval sits with SEBI under the FPI Regulations, not RBI.","DDPs register FPIs. They don't sponsor other DDPs."],
+ cite:"FPI Regs 2019, Reg 10(2)–(3); Second Schedule Part B"},
+{ch:"III",d:2,ref:"DDP/VAL/133",title:"SEBI wants to withdraw a DDP's approval",
+ facts:[["DDP","Approved in 2020"],["Inspection finding","Repeated breaches of FPI circulars"],["SEBI view","Approval should be withdrawn"],["DDP argues","Isn't our approval time-limited anyway?"]],
+ q:"Which is correct?",
+ opts:["Approval lapses after five years, so SEBI can simply let it run out","Approval is permanent; SEBI can withdraw it by order after a hearing","SEBI can withdraw it immediately without a hearing","Only RBI can withdraw a DDP's approval"],ans:1,
+ why:"Reg 16 makes DDP approval permanent unless it is suspended, withdrawn or surrendered. Under Reg 17, if a DDP breaches its conditions or the securities laws, SEBI may suspend or withdraw approval by order, after giving the DDP a reasonable opportunity to be heard.",
+ no:["DDP approval has no fixed term under Reg 16.",null,"Reg 17 requires a reasonable opportunity to be heard first.","SEBI grants the approval, and only SEBI withdraws it."],
+ cite:"FPI Regs 2019, Reg 16–18"},
+{ch:"III",d:1,ref:"DDP/REJ/134",title:"DDP applicant is turned down",
+ facts:[["Applicant","Proposed DDP"],["SEBI received","Application on 1 April"],["Outcome","Rejected in writing on 20 April, citing missing systems"],["Applicant asks","Is there any recourse?"]],
+ q:"What can it do?",
+ opts:["Nothing. SEBI's rejection is final","Ask SEBI to reconsider within 30 days","Appeal to the depository that forwarded it","Wait one year and then reapply"],ans:1,
+ why:"Under Reg 15, SEBI gives reasons for a rejection in writing, and the applicant can ask for reconsideration within 30 days. SEBI decides after a hearing. Before rejecting at all, Reg 14 gives the applicant a reasonable chance to fix deficiencies. Reg 13(2) asks SEBI to decide applications within 30 days.",
+ no:["Reg 15(3) gives a 30-day reconsideration route.",null,"The depository only forwards the application. It has no appeal role.","The regulations set no waiting period."],
+ cite:"FPI Regs 2019, Reg 13(2), 14, 15"},
+
+/* ---------- Ch IV: Investment conditions ---------- */
+{ch:"IV",d:1,ref:"INV/DLV/141",title:"Intraday trading in cash equity",
+ facts:[["FPI","Category II fund"],["Plan","Buy and sell the same shares in one day, without delivery"],["Segment","Cash market"],["Broker","SEBI-registered"]],
+ q:"Is this allowed?",
+ opts:["Yes, through a registered broker","No. FPIs must take and give delivery","Yes, for Category I only","Yes, up to 10% of the company"],ans:1,
+ why:"Under Reg 20(4)(a), FPIs deal in securities only by taking and giving delivery. The exceptions include exchange-traded derivatives, short selling under SEBI's framework, and market-making arrangements. Selling against purchases that haven't settled isn't allowed either.",
+ no:["A registered broker is required, but that doesn't remove the delivery rule.",null,"The delivery rule applies to both categories.","The 10% limit is about holding size, not delivery."],
+ cite:"FPI Regs 2019, Reg 20(4)(a)–(b); Op. Guidelines Part C 5"},
+{ch:"IV",d:3,ref:"INV/BRK/142",title:"Tendering in a buyback without a broker",
+ facts:[["FPI","Category I fund"],["Event","Listed company runs a buyback under the SEBI Buy-back Regulations"],["Plan","Tender shares directly"],["Question","Is a SEBI-registered broker required?"]],
+ q:"Which is right?",
+ opts:["Yes. Every FPI deal goes through a registered broker","No. Buyback sales are exempt from the broker rule","Only Category II FPIs are exempt","Buybacks aren't open to FPIs"],ans:1,
+ why:"Reg 20(4)(c) requires FPIs to deal through SEBI-registered brokers, but Reg 20(4)(d) lists exceptions. They include G-Sec deals done as RBI specifies, open offers, delisting offers, buybacks, government disinvestment offers, corporate bonds, and transfers of rights entitlements.",
+ no:["Reg 20(4)(d) lists specific exceptions, and buybacks are one of them.",null,"The exceptions apply to all FPIs.","FPIs can tender. The regulation names buyback sales specifically."],
+ cite:"FPI Regs 2019, Reg 20(4)(c)–(d)"},
+{ch:"IV",d:2,ref:"INV/BEN/143",title:"Shares in the global custodian's name",
+ facts:[["FPI","Category I fund"],["Global custodian wants","Indian shares registered in its omnibus name"],["Local custodian","The FPI's DDP"],["SEBI approval","None"]],
+ q:"Can the shares be held that way?",
+ opts:["Yes. Omnibus holding is routine for global custodians","No. They must be in the FPI's own name","Yes, if the FPI gives the custodian a power of attorney","Yes, but only for its Government Securities"],ans:1,
+ why:"Under Reg 20(6), unless SEBI approves otherwise, securities are registered in the FPI's name as beneficial owner. FPIs also hold securities only in demat form, with narrow exceptions for older physical shares and rights entitlements.",
+ no:["Omnibus holding isn't allowed in India without SEBI approval.",null,"A power of attorney lets the custodian act, but it doesn't change whose name the securities are in.","Reg 20(6) has no G-Sec carve-out."],
+ cite:"FPI Regs 2019, Reg 20(4)(e), Reg 20(6)"},
+{ch:"IV",d:2,ref:"INV/CA/144",title:"Unlisted shares from a merger",
+ facts:[["FPI","Category II fund holding listed shares of Company A"],["Event","Merger approved by the tribunal"],["Result","A's shareholders receive shares of unlisted Company B"],["FPI asks","Can we keep B's shares?"]],
+ q:"How are B's shares treated?",
+ opts:["Not allowed. The FPI must sell before allotment","It can hold and sell them, but they count as FDI","They count as FPI investment like listed shares","They must be transferred to a resident Indian buyer at once"],ans:1,
+ why:"Reg 20(4)(d)(x) lets FPIs receive, hold and sell unlisted securities they get through involuntary corporate actions, such as an approved merger or demerger. Its proviso treats those unlisted holdings as foreign direct investment.",
+ no:["Receiving shares through an involuntary corporate action is expressly allowed.",null,"The proviso treats unlisted holdings as FDI, not portfolio investment.","There's no forced transfer. The FPI can hold and sell under FDI rules."],
+ cite:"FPI Regs 2019, Reg 20(4)(d)(x) and proviso"},
+{ch:"IV",d:2,ref:"INV/ODI/145",title:"ODI holder wants to transfer to an affiliate",
+ facts:[["ODI issuer","Category I FPI"],["Holder","Eligible subscriber, transferring to an affiliate"],["Affiliate","Eligible as Category I; not pre-approved"],["Issuer","Not yet asked"]],
+ q:"What's needed?",
+ opts:["Nothing. ODIs move freely between eligible persons","The issuer's prior consent","SEBI's approval of each transfer","The DDP's consent"],ans:1,
+ why:"Under Reg 21(2), an ODI can only be transferred to someone who meets the issuance conditions. The issuing FPI's prior consent is also needed, unless it has pre-approved the transferee. Issuers report all transfers, including those during the month, in their monthly ODI reports.",
+ no:["The transferee must be eligible, and the issuer must also consent unless it pre-approved them.",null,"SEBI receives reports. It doesn't approve each transfer.","The DDP has no consent role for ODI transfers."],
+ cite:"FPI Regs 2019, Reg 21(2); Op. Guidelines Part D 3(i)"},
+
+/* ---------- Ch V: FPI obligations ---------- */
+{ch:"V",d:2,ref:"OBL/ENC/151",title:"Pledging Indian shares to a prime broker",
+ facts:[["FPI","Category II hedge fund"],["Plan","Pledge Indian shares to its offshore prime broker"],["Purpose","Financing"],["Regulatory need","None"]],
+ q:"Is this allowed?",
+ opts:["Yes. FPIs can pledge their holdings freely","No. Only regulatory encumbrances are allowed","Yes, as long as the prime broker is regulated","Yes, up to 10% of its Indian holdings"],ans:1,
+ why:"Under Reg 22(1)(k), an FPI must keep its securities free from all encumbrances. Encumbrances created to meet statutory or regulatory requirements, such as margin obligations, don't count.",
+ no:["Reg 22(1)(k) bans encumbrances unless they meet a statutory or regulatory requirement.",null,"The prime broker being regulated doesn't create an exception.","There's no percentage allowance."],
+ cite:"FPI Regs 2019, Reg 22(1)(k) and Explanation"},
+{ch:"V",d:2,ref:"OBL/RPT/152",title:"Overseas regulator fines the FPI",
+ facts:[["FPI","Category I asset manager"],["Event","Home regulator imposes a penalty on 3 March"],["Licence","Unaffected"],["Question","When to tell the DDP and SEBI"]],
+ q:"What's the deadline?",
+ opts:["At the next continuance of registration","Within 7 working days","Within 30 days of the penalty order","Only if the licence is cancelled"],ans:1,
+ why:"Under Reg 22(1)(e), the FPI tells SEBI and its DDP, as soon as possible and within 7 working days, about any penalty, pending litigation or proceedings, or inspection findings by an overseas regulator. The same deadline applies to false or misleading information and material changes. A past action doesn't automatically make the FPI ineligible.",
+ no:["Waiting for continuance breaches the 7-working-day deadline.",null,"The deadline is 7 working days, not 30 days.","Any penalty or proceeding must be reported, not just a cancellation."],
+ cite:"FPI Regs 2019, Reg 22(1)(b), (c), (e); Op. Guidelines Part A 2(vi)"},
+{ch:"V",d:1,ref:"OBL/DDP/153",title:"Register with one bank, keep custody at another",
+ facts:[["Applicant","Category I fund"],["Wants","Registration through DDP A, custody with Bank B"],["Reason","Bank B is cheaper"],["Both banks","Approved DDPs"]],
+ q:"Can it split them?",
+ opts:["Yes. Any custodian bank will do","No. They must be the same entity","Yes, with SEBI's prior approval","Yes, because both are approved DDPs"],ans:1,
+ why:"Under Reg 24, the FPI's DDP and its custodian must be the same entity at all times. Before investing, the FPI or its global custodian signs a custody agreement with that DDP (Reg 25).",
+ no:["Reg 24 requires one entity for both roles.",null,"Reg 24 has no approval route.","Being approved DDPs doesn't let the roles be split between two of them."],
+ cite:"FPI Regs 2019, Reg 24–25"},
+{ch:"V",d:1,ref:"OBL/BNK/154",title:"Bank accounts before the first trade",
+ facts:[["FPI","Newly registered Category II fund"],["Done","Registration, custody agreement, PAN"],["Not done","Bank accounts"],["Plan","Buy shares tomorrow"]],
+ q:"What's missing?",
+ opts:["Nothing. It can start trading tomorrow","Foreign currency and SNRR bank accounts","A separate RBI licence to invest in Indian securities","A second PAN registered for the bank"],ans:1,
+ why:"Under Reg 26, before investing, an FPI appoints a branch of an RBI-authorised bank to open a foreign currency account and a special non-resident rupee (SNRR) account. Reg 22(1)(f) separately requires a PAN.",
+ no:["The bank accounts must exist before any investment.",null,"An FPI doesn't need a separate RBI licence.","One PAN per FPI. The bank uses the same one."],
+ cite:"FPI Regs 2019, Reg 26, Reg 22(1)(f)"},
+{ch:"V",d:2,ref:"OBL/MED/155",title:"Portfolio manager recommends a stock on TV",
+ facts:[["FPI","Category I fund"],["Event","Its portfolio manager recommends an Indian stock on a business channel"],["Fund position","Long in that stock"],["Disclosed on air","Nothing"]],
+ q:"What went wrong?",
+ opts:["Nothing. FPIs may comment on stocks freely","The fund's long position wasn't disclosed","FPI employees can't appear in the media","Only the stock exchange needed to be told"],ans:1,
+ why:"Under Reg 28, an FPI or its employees can't give investment advice about a security in public media without disclosing their interest, including long or short positions, at the time. An employee also discloses the interests of dependent family members and of the employer.",
+ no:["Advice is allowed, but only with disclosure.",null,"Appearing is allowed. The rule is about disclosing interests.","The disclosure goes to the audience at the time of the advice."],
+ cite:"FPI Regs 2019, Reg 28"},
+{ch:"V",d:2,ref:"OBL/REC/156",title:"Keeping records after surrender",
+ facts:[["FPI","Category II fund"],["Event","SEBI approved surrender on 1 August 2026"],["Records","Contract notes, bank statements, remittance accounts"],["Question","When can they be destroyed?"]],
+ q:"What's the minimum retention?",
+ opts:["One year after the surrender","Five years from SEBI's approval","Eight years from the last trade","They can go once surrender is approved"],ans:1,
+ why:"Reg 29 lists the records an FPI keeps: remittance accounts, bank statements, contract notes and communications with intermediaries. Reg 30 says to keep them for at least five years from the date SEBI approves the surrender or cancellation. DDPs, by contrast, keep their records at all times (Reg 32(3)).",
+ no:["The minimum is five years, not one.",null,"The clock starts from SEBI's approval of surrender or cancellation, and the period is five years.","Records must be kept for five years after surrender."],
+ cite:"FPI Regs 2019, Reg 29–30, Reg 32(3)"},
+{ch:"V",d:1,ref:"OBL/CO/157",title:"Individual FPI with no staff",
+ facts:[["FPI","Category II individual investor"],["Staff","None"],["Question","Do I need to appoint a compliance officer?"],["DDP","Asks for the officer's name"]],
+ q:"What's the rule?",
+ opts:["Yes. A separate compliance officer is mandatory","No. The individual is responsible","The DDP acts as its compliance officer","Only Category I FPIs need one"],ans:1,
+ why:"Reg 27 requires every FPI to appoint a compliance officer, who reports any non-compliance straight to SEBI and the DDP. For an individual FPI, the individual carries that responsibility.",
+ no:["The proviso to Reg 27(1) makes the individual responsible.",null,"The DDP has its own compliance officer under Reg 33. It doesn't act for the FPI.","Reg 27 applies to every FPI."],
+ cite:"FPI Regs 2019, Reg 27"},
+{ch:"V",d:2,ref:"OBL/JNT/158",title:"Two holders, one account",
+ facts:[["Applicants","Two siblings, foreign nationals (not NRIs or OCIs)"],["Want","One joint FPI account"],["Sibling A","Meets FPI eligibility; KYC done"],["Sibling B","No KYC submitted"]],
+ q:"What's needed?",
+ opts:["Only the first holder has to qualify","Each holder must qualify and do KYC","Joint FPI accounts aren't allowed","The second holder just signs a declaration"],ans:1,
+ why:"Under Reg 22(2), each joint holder must meet the FPI requirements and is treated as holding a depository account as an FPI. Reg 31(1)(f) requires the DDP to do KYC on each joint holder.",
+ no:["Every joint holder must qualify.",null,"Joint accounts are allowed when each holder meets the requirements.","A declaration doesn't replace KYC."],
+ cite:"FPI Regs 2019, Reg 22(2), Reg 31(1)(f)"},
+
+/* ---------- Ch VI: DDP obligations ---------- */
+{ch:"VI",d:2,ref:"DDO/RPT/161",title:"RBI fines the DDP itself",
+ facts:[["DDP","A bank approved as a DDP"],["Event","RBI imposes a penalty on 12 May"],["Question","Who must be told, and by when?"],["Licence","Unaffected"]],
+ q:"What's the duty?",
+ opts:["Tell SEBI only, in its next annual audit report","SEBI, depositories and exchanges, in 2 working days","Tell RBI only, since RBI imposed the penalty","Write to all its FPI clients within 30 days of the order"],ans:1,
+ why:"Under Reg 31(1)(g), a DDP reports any penalty, pending litigation, proceedings or adverse inspection findings by any regulator to SEBI, the depositories and the stock exchanges, as soon as possible and within two working days. Changes to its own information go to SEBI within two working days too. Compare FPIs, who get seven working days.",
+ no:["The annual audit is too late, and the depositories and exchanges must be told as well.",null,"RBI already knows. The duty is to inform SEBI, the depositories and the exchanges.","The regulation names SEBI, the depositories and the exchanges, not clients."],
+ cite:"FPI Regs 2019, Reg 31(1)(b), (c), (g)"},
+{ch:"VI",d:2,ref:"DDO/ACC/162",title:"A second NSDL account for a new strategy",
+ facts:[["FPI","Category I fund with an NSDL account through its DDP"],["Request","A second NSDL account for a new strategy"],["Special scheme","Not under the Voluntary Retention Route or any other scheme"],["Manager","Same as the existing account"]],
+ q:"Can the DDP open it?",
+ opts:["Yes. FPIs can open as many accounts as they need","No. One per depository, unless for VRR-type schemes","Yes, if it's opened through a different custodian","Yes, once SEBI has been informed in writing beforehand"],ans:1,
+ why:"Under Reg 31(2)(c), the DDP checks before opening an account that the applicant holds no other FPI account at that depository. Separate accounts are allowed for the Voluntary Retention Route or other schemes RBI or SEBI specify. An FPI may hold an account at both NSDL and CDSL, but with only one custodian.",
+ no:["The rule is one account per depository.",null,"The DDP and the custodian must be the same entity, and the one-account rule applies anyway.","There's no notification route around Reg 31(2)(c)."],
+ cite:"FPI Regs 2019, Reg 31(2)(c); Op. Guidelines Part B 3"},
+{ch:"VI",d:3,ref:"DDO/AUD/163",title:"When the DDP's audit report is due",
+ facts:[["DDP","Custodian bank approved as a DDP"],["Report","Internal-control audit for calendar year 2026"],["Also due","Action-taken report on the audit"],["Question","Deadlines"]],
+ q:"What are the deadlines?",
+ opts:["Within 90 days after 2026 ends; action-taken reports quarterly","By 31 December 2026, with the action-taken report filed once a year","Within 30 days after 2026 ends; no action-taken report needed","Only when SEBI inspects"],ans:0,
+ why:"Under Reg 31(5)–(7), the DDP has an independent professional review its systems every year. It sends SEBI the internal-control audit report for a calendar year within 90 days after that year ends, so by about the end of March 2027 for 2026. Any action-taken report on the audit goes in every quarter.",
+ no:[null,"The report covers the full calendar year, so it can't be due before the year ends, and action-taken reports are quarterly.","The window is 90 days, and action-taken reports are required.","Annual reporting is mandatory, not triggered by inspections."],
+ cite:"FPI Regs 2019, Reg 31(5)–(7)"},
+{ch:"VI",d:1,ref:"DDO/GRP/164",title:"Investor-group box left blank",
+ facts:[["Applicant","New Category II fund"],["Parent","Owns 55% of two FPIs already registered"],["Application","Investor-group section left blank"],["DDP","Ready to approve"]],
+ q:"What must the DDP do?",
+ opts:["Approve it. Investor groups are the depositories' job","Check for an investor group before registering it","Ask the FPI to report its group within a year","Nothing, unless the group crosses 10% somewhere"],ans:1,
+ why:"Under Reg 31(2)(a), the DDP must find out at registration, and whenever it becomes relevant, whether the applicant is part of an investor group. Common ownership above 50% puts this one in a group. The FPI must keep its investor-group details accurate with the DDP (Reg 22(1)(l)), and the custodian reports group holdings to the depositories (Reg 25(2)(d)).",
+ no:["The depositories monitor the group limit using the details the DDP collects at onboarding.",null,"The group is checked at registration, not a year later.","The 10% limit applies to the group from day one, so the group must be known before any purchase."],
+ cite:"FPI Regs 2019, Reg 31(2)(a), Reg 22(1)(l), Reg 25(2)(d)"},
+
+/* ---------- Second Schedule: Fees ---------- */
+{ch:"FEE",d:1,ref:"FEE/REG/171",title:"First fee for a family office",
+ facts:[["Applicant","Category II family office"],["Question","What is SEBI's registration fee, and how often is it paid?"],["Location","Singapore"],["Route","Regular FPI"]],
+ q:"What does it pay?",
+ opts:["US$250 for each three-year block","US$2,500 for each three-year block","US$250 once, for life","US$3,000 every three years"],ans:0,
+ why:"Under the Second Schedule Part A, Category I pays US$2,500 and Category II pays US$250, at application and for every three-year block while registered. These amounts replaced US$3,000 and US$300 in November 2022.",
+ no:[null,"US$2,500 is the Category I fee.","The fee is due again for every three-year block.","US$3,000 was the old Category I fee, before November 2022."],
+ cite:"FPI Regs 2019, Second Schedule Part A(1)–(2)"},
+{ch:"FEE",d:2,ref:"FEE/EXM/172",title:"Multilateral development bank applies",
+ facts:[["Applicant","Multilateral development bank set up outside India to provide aid"],["Status","Granted privileges and immunities from Indian taxes and duties by the Central Government"],["Category","I"],["Question","Registration fee"]],
+ q:"What does it pay?",
+ opts:["US$2,500, like any other Category I FPI","Nothing. It's exempt","US$250, at a reduced rate for aid bodies","The US$800 regulatory fee instead"],ans:1,
+ why:"The Second Schedule Part A(3) exempts international or multilateral agencies, such as the World Bank, from registration fees. They must be set up outside India to provide aid and have privileges and immunities granted by the Central Government. Separately, World Bank Group entities are exempt from combining holdings for the 10% limit.",
+ no:["The Part A(3) exemption overrides the standard Category I fee.",null,"There's no reduced rate. It's a full exemption.","US$800 is the regulatory fee on ODI subscribers."],
+ cite:"FPI Regs 2019, Second Schedule Part A(3); Op. Guidelines Part C 1"},
+{ch:"FEE",d:2,ref:"FEE/REM/173",title:"Passing collected fees on to SEBI",
+ facts:[["DDP","Collected FPI registration and continuance fees during September 2026"],["Question","When must the money reach SEBI?"],["Format","SEBI's prescribed statement"],["Fees collected","Mix of Category I and II"]],
+ q:"What's the deadline?",
+ opts:["By the 5th working day of October 2026","By 31 March 2027, with the annual return","Within 30 days of receiving each fee","In a single batch at the end of the year"],ans:0,
+ why:"Under the Second Schedule Part A(5), every DDP sends SEBI the fees it collected in the previous month by the 5th working day of each month, with details in the prescribed format. DDPs collect continuance fees in advance, once every three years (Part A(4)).",
+ no:[null,"Fees go to SEBI monthly, not yearly.","The rule is monthly, by the 5th working day, not 30 days per receipt.","There's no yearly batch. Remittance is monthly."],
+ cite:"FPI Regs 2019, Second Schedule Part A(4)–(5); Reg 7(3)"},
+{ch:"FEE",d:3,ref:"FEE/ODI/174",title:"Regulatory fee on ODI subscribers",
+ facts:[["ODI issuer","Category I FPI"],["Subscribers","40 eligible subscribers"],["Question","What SEBI fee applies to each subscriber?"],["Cycle","Next deposit due"]],
+ q:"What's the fee?",
+ opts:["US$800 per subscriber, once every three years","US$1,000 per subscriber, every year","US$2,500 per subscriber, once","No fee. Only the issuer pays its FPI fee"],ans:0,
+ why:"Under the Second Schedule Part C, the issuing FPI collects a US$800 regulatory fee from every ODI subscriber and deposits it with SEBI, once every three years (counting from 1 April 2017).",
+ no:[null,"US$1,000 was the old amount, replaced by US$800 in November 2022, and it's paid every three years, not yearly.","US$2,500 is the Category I registration fee.","Reg 21(4) requires the issuer to collect a fee from every subscriber."],
+ cite:"FPI Regs 2019, Reg 21(4); Second Schedule Part C"}
+];
+
+const CH={II:"Ch II · Registration of FPIs",III:"Ch III · Approval of DDPs",IV:"Ch IV · Investment conditions",V:"Ch V · FPI obligations",VI:"Ch VI · DDP obligations",FEE:"2nd Schedule · Fees",SW:"SWAGAT-FI",GS:"GS-FPI"};
+const CH_OLD={"MON/LIM/108":"IV","MON/LIM/109":"V","MON/CHG/110":"V","MON/CHG/111":"V","MON/INV/117":"IV","MON/ODI/118":"IV","MON/INV/120":"IV"};
+CASES.forEach(c=>{if(!c.ch)c.ch=c.m==="SWAGAT-FI"?"SW":c.m==="GS-FPI"?"GS":(CH_OLD[c.ref]||"II");});
+
+/* ---------- question bank (questions.csv) ---------- */
+const BANK={source:"built-in",skipped:[],counts:{},error:"",pending:null};
+function parseCSV(t){
+  t=t.replace(/^﻿/,"");
+  const nl=t.indexOf("\n"),first=nl<0?t:t.slice(0,nl);
+  const delim=first.split(";").length>first.split(",").length?";":",";
+  const rows=[];let row=[],f="",q=false;
+  for(let i=0;i<t.length;i++){const ch=t[i];
+    if(q){if(ch==='"'){if(t[i+1]==='"'){f+='"';i++;}else q=false;}else f+=ch;}
+    else if(ch==='"')q=true;
+    else if(ch===delim){row.push(f);f="";}
+    else if(ch==="\n"){row.push(f);rows.push(row);row=[];f="";}
+    else if(ch!=="\r")f+=ch;}
+  if(f!==""||row.length){row.push(f);rows.push(row);}
+  return rows;
+}
+function rowsToCases(rows){
+  const hdr=(rows[0]||[]).map(x=>String(x).trim().toLowerCase());
+  const need=["ref","status","question","option_a","option_b","option_c","option_d","answer","explanation"];
+  const missing=need.filter(n=>!hdr.includes(n));
+  if(missing.length)return {error:"missing column "+missing.join(", ")};
+  const get=(r,n)=>{const i=hdr.indexOf(n);return i<0?"":String(r[i]==null?"":r[i]).trim();};
+  const out=[],skipped=[],counts={};
+  rows.slice(1).forEach((r,ix)=>{
+    if(!r.some(v=>String(v).trim()))return;
+    const ref=get(r,"ref")||("row "+(ix+2));
+    const st=get(r,"status").toLowerCase()||"blank";
+    counts[st]=(counts[st]||0)+1;
+    if(st!=="live")return;
+    const opts=["a","b","c","d"].map(x=>get(r,"option_"+x));
+    const ans="ABCD".indexOf(get(r,"answer").toUpperCase());
+    const d=parseInt(get(r,"difficulty"),10);
+    let why="";
+    if(opts.some(o=>!o))why="needs 4 options";
+    else if(ans<0||get(r,"answer").length!==1)why="answer must be A–D";
+    else if(!(d>=1&&d<=3))why="difficulty must be 1–3";
+    else if(!get(r,"question")||!get(r,"explanation"))why="missing question or explanation";
+    if(why){skipped.push(ref+": "+why);return;}
+    const facts=[];
+    for(let i=1;i<=6;i++){const k=get(r,"fact"+i+"_label"),v=get(r,"fact"+i+"_value");if(k||v)facts.push([k||"Detail",v]);}
+    const no=["a","b","c","d"].map((x,k)=>k===ans?null:(get(r,"why_not_"+x)||"This option doesn't match the rule explained above."));
+    const law=[];
+    for(let i=1;i<=3;i++){const t=get(r,"quote_"+i);if(t)law.push([get(r,"quote_"+i+"_source"),t]);}
+    out.push({ref,ch:get(r,"chapter").toUpperCase()||"II",d,title:get(r,"title")||get(r,"question"),facts,q:get(r,"question"),opts,ans,
+      why:get(r,"explanation"),no,cite:get(r,"citation"),law,t:get(r,"verify").toUpperCase()==="Y"?SEC:undefined});
+  });
+  return {cases:out,skipped,counts};
+}
+async function loadBank(){
+  try{
+    const r=await fetch("questions.csv",{cache:"no-store"});
+    if(!r.ok)throw new Error(r.status===404?"file not found":"HTTP "+r.status);
+    const res=rowsToCases(parseCSV(await r.text()));
+    if(res.error)throw new Error(res.error);
+    BANK.skipped=res.skipped;BANK.counts=res.counts;
+    if(res.cases.length<10)throw new Error("only "+res.cases.length+" usable live questions (need at least 10)");
+    BANK.pending=res.cases;
+    if(!S||S.screen!=="play")applyBank();
+  }catch(e){BANK.error=e.message||String(e);}
+  if(S&&S.screen==="intro")renderIntro();
+}
+function applyBank(){if(BANK.pending){CASES=BANK.pending;BANK.pending=null;BANK.source="questions.csv";}}
+function bankText(){
+  const present=new Set(CASES.map(c=>c.ch));const chs=[...Object.keys(CH).filter(k=>present.has(k)).map(k=>CH[k]),...[...present].filter(k=>!CH[k])];
+  let t=BANK.source==="questions.csv"?CASES.length+" live questions from the question bank":CASES.length+" built-in questions";
+  t+=", covering "+chs.join(", ")+".";
+  if(BANK.skipped.length)t+=" "+BANK.skipped.length+" live row"+(BANK.skipped.length>1?"s were":" was")+" skipped ("+BANK.skipped.slice(0,3).join("; ")+(BANK.skipped.length>3?"; …":"")+").";
+  if(BANK.source!=="questions.csv"&&BANK.error)t+=" Question bank not used: "+BANK.error+".";
+  return t;
+}
+
+
+let S;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+function lsGet(k){try{return localStorage.getItem(k)||"";}catch(e){return "";}}
+function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+
+/* ---------- league table (Supabase REST) ---------- */
+const CFG_DEFAULT={supabaseUrl:"https://ehhljhueboqwyyxjstpa.supabase.co",supabaseAnonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGxqaHVlYm9xd3l5eGpzdHBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5MTI5NzgsImV4cCI6MjEwODQ4ODk3OH0.3JMxx6LJYeuPJYgvhFb4CzcHrZHvYnatLrlJpPpa0IM"};
+const CFG_FILE=window.CDL_CONFIG||{};
+const CFG=(CFG_FILE.supabaseUrl&&!/YOUR_/.test(CFG_FILE.supabaseUrl+CFG_FILE.supabaseAnonKey))?CFG_FILE:CFG_DEFAULT;
+const BOARD_ON=!!(CFG.supabaseUrl&&CFG.supabaseAnonKey&&!/YOUR_/.test(CFG.supabaseUrl+CFG.supabaseAnonKey));
+const L={rows:[],ready:false,filter:0,note:"",mine:{best:+lsGet("cdl-best")||0,bestLen:+lsGet("cdl-bestlen")||0,rounds:+lsGet("cdl-rounds")||0}};
+async function sb(path,opts){
+  opts=opts||{};
+  const r=await fetch(CFG.supabaseUrl.replace(/\/$/,"")+"/rest/v1/"+path,Object.assign({},opts,{headers:Object.assign({apikey:CFG.supabaseAnonKey,Authorization:"Bearer "+CFG.supabaseAnonKey,"Content-Type":"application/json"},opts.headers||{})}));
+  if(!r.ok)throw new Error("HTTP "+r.status);
+  return r.status===204||r.status===201?null:r.json();
+}
+async function loadBoard(){
+  if(!BOARD_ON)return;
+  try{
+    const rows=await sb("scores?select=name,score,correct,total,created_at&order=score.desc,created_at.asc&limit=500"+(L.filter?"&total=eq."+L.filter:""));
+    const seen=new Set();L.rows=[];
+    for(const r of rows){const k=String(r.name).trim().toLowerCase();if(seen.has(k))continue;seen.add(k);L.rows.push(r);if(L.rows.length>=50)break;}
+    L.ready=true;L.note="";
+  }catch(e){L.note="Couldn't reach the league table ("+e.message+"). It will retry shortly.";}
+  renderBoard();
+}
+function connect(){
+  renderTabs();
+  if(!BOARD_ON){L.note="The league table isn't connected yet. You can still play.";renderBoard();return;}
+  loadBoard();
+  setInterval(()=>{if(document.visibilityState==="visible")loadBoard();},15000);
+  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")loadBoard();});
+}
+function post(){}
+async function submitRound(){
+  const m=L.mine;m.rounds++;
+  if(S.score>m.best){m.best=S.score;m.bestLen=S.len;}
+  lsSet("cdl-best",String(m.best));lsSet("cdl-bestlen",String(m.bestLen));lsSet("cdl-rounds",String(m.rounds));
+  if(!BOARD_ON||!L.ready)return;
+  const el=()=>document.getElementById("postMsg");
+  try{
+    await sb("scores",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({name:S.name,score:S.score,correct:S.correct,total:S.len})});
+    if(el())el().textContent="Your score is on the league table.";
+    loadBoard();
+  }catch(e){if(el())el().textContent="Your score couldn't be posted. Check your connection and play again.";}
+}
+function renderTabs(){
+  const t=$("tabs");t.textContent="";
+  [[0,"All"],[10,"10 Qs"],[15,"15 Qs"],[20,"20 Qs"],[25,"25 Qs"]].forEach(([n,lab])=>{
+    const b=document.createElement("button");b.className="tab";b.setAttribute("role","tab");b.textContent=lab;
+    b.setAttribute("aria-selected",String(L.filter===n));b.onclick=()=>{L.filter=n;renderTabs();L.ready=false;renderBoard();loadBoard();};
+    t.appendChild(b);
+  });
+  t.hidden=!BOARD_ON;
+}
+function renderBoard(){
+  const show=BOARD_ON&&L.ready;document.querySelector("aside.board").hidden=!show;document.querySelector(".layout").classList.toggle("solo",!show);
+  const t=$("table");
+  $("boardMeta").textContent=BOARD_ON?(L.ready?L.rows.length+(L.rows.length===1?" player":" players")+" · live":"loading…"):"not connected";
+  t.textContent="";
+  if(BOARD_ON&&L.ready&&!L.rows.length){const p=document.createElement("li");p.style.display="block";const s=document.createElement("p");s.className="empty";s.textContent="No scores yet. Finish a round to take the top spot.";p.appendChild(s);t.appendChild(p);}
+  const me=(S&&S.name||"").trim().toLowerCase();
+  L.rows.forEach((r,i)=>{
+    const li=document.createElement("li");const isMe=me&&String(r.name).trim().toLowerCase()===me;if(isMe)li.className="me";
+    const rk=document.createElement("span");rk.className="rk";rk.textContent=i+1;
+    const nm=document.createElement("span");nm.className="nm";nm.textContent=r.name+(isMe?" (you)":"");
+    const pts=document.createElement("span");pts.className="pts";pts.textContent=r.score;
+    const sub=document.createElement("span");sub.className="sub";
+    sub.textContent=r.correct+"/"+r.total+" correct · "+r.total+"-question round";
+    li.append(rk,nm,pts,sub);t.appendChild(li);
+  });
+  $("boardNote").textContent=L.note;
+}
+
+/* ---------- game ---------- */
+function start(data){
+  S=Object.assign({screen:"intro",name:lsGet("cdl-name"),len:+lsGet("cdl-len")||10,level:2,used:[],cur:null,perm:[0,1,2,3],picked:null,score:0,correct:0,hist:[],view:null},data||{});
+  if(!LENGTHS.includes(S.len))S.len=10;
+  render();
+}
+
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function draw(){S.cur=drawNext();S.used.push(S.cur);S.perm=shuffle([0,1,2,3]);S.picked=null;}
+function drawNext(){
+  const avail=CASES.map((c,k)=>k).filter(k=>!S.used.includes(k));
+  for(const off of [0,1,-1,2,-2]){
+    const lvl=S.level+off;const pool=avail.filter(k=>CASES[k].d===lvl);
+    if(pool.length)return pool[Math.floor(Math.random()*pool.length)];
+  }
+  return null;
+}
+function begin(){
+  applyBank();
+  const maxLen=Math.max(...LENGTHS.filter(n=>n<=CASES.length));if(S.len>maxLen)S.len=maxLen;
+  const v=($("name")?.value||"").trim().slice(0,24);
+  if(!v){$("nameErr").textContent="Enter a name for the league table.";$("name").focus();return;}
+  S.name=v;lsSet("cdl-name",v);lsSet("cdl-len",String(S.len));
+  Object.assign(S,{screen:"play",level:2,used:[],picked:null,score:0,correct:0,hist:[]});
+  draw();
+  post({name:v,best:L.mine?.best||0,rounds:L.mine?.rounds||0,live:0,playing:true,updatedAt:new Date().toISOString()});
+  render();window.scrollTo({top:0});
+}
+function pick(j){
+  if(S.view!==null||S.picked!==null)return;
+  const c=CASES[S.cur];const k=S.perm[j];S.picked=k;
+  const ok=k===c.ans;
+  S.hist.push({k:S.cur,ok,d:c.d,picked:k,perm:S.perm.slice()});
+  if(ok){S.score+=PTS[c.d];S.correct++;S.level=Math.min(3,S.level+1);}
+  else S.level=Math.max(1,S.level-1);
+  post({live:S.score,playing:true,updatedAt:new Date().toISOString()});
+  render();
+}
+function next(){
+  S.view=null;
+  if(S.hist.length>=S.len){return finish();}
+  draw();render();window.scrollTo({top:0});
+}
+function finish(){
+  S.screen="end";
+  const best=Math.max(L.mine?.best||0,S.score);
+  S.newBest=S.score>(L.mine?.best||0)&&S.score>0;
+  submitRound();
+  render();window.scrollTo({top:0});
+}
+
+function render(){
+  $("score").textContent=S.score;
+  $("correct").textContent=S.correct+"/"+S.hist.length;
+  $("count").textContent=S.screen==="play"?Math.min(S.hist.length+(S.picked===null?1:0),S.len)+"/"+S.len:"–";
+  if(S.screen==="intro")return renderIntro();
+  if(S.screen==="end")return renderEnd();
+  renderCase();
+}
+function renderIntro(){
+  $("game").innerHTML=`<section class="intro">
+    <h2>The desk gets harder as you get better.</h2>
+    <ul class="rules3">
+      <li><strong>Adaptive</strong>A right answer moves you up a level. A wrong one moves you down.</li>
+      <li><strong>Points</strong>Easy 100, Medium 200, Hard 300. Wrong answers score nothing.</li>
+      <li><strong>League</strong>Your best round goes on the live table for everyone to see.</li>
+    </ul>
+    <label for="name">Your name on the table</label>
+    <div class="namerow"><input type="text" id="name" maxlength="24" autocomplete="nickname" placeholder="e.g. Kishan S."></div>
+    <label id="lenLabel">Questions in this round</label>
+    <div class="lens" role="radiogroup" aria-labelledby="lenLabel">${LENGTHS.filter(n=>n<=CASES.length).map(n=>`<button class="len" role="radio" aria-checked="${n===S.len}" data-n="${n}">${n}</button>`).join("")}</div>
+    <div class="row"><button class="btn" id="go">Start round</button></div>
+    <p class="note" id="nameErr"></p>
+    <p class="note"><span id="bankNote">${esc(bankText())}</span> No sign-up needed. Every answer comes with the rule behind it and why each other option is wrong. Longer rounds can score more, so the table shows how many questions each best score came from.</p>
+  </section>`;
+  $("name").value=S.name||"";
+  document.querySelectorAll(".len").forEach(b=>b.onclick=()=>{S.name=$("name").value;S.len=+b.dataset.n;lsSet("cdl-len",String(S.len));renderIntro();});
+  $("go").onclick=begin;
+  $("name").onkeydown=e=>{if(e.key==="Enter")begin();};
+}
+function renderCase(){
+  const c=CASES[S.cur],done=S.picked!==null,right=done&&S.picked===c.ans;
+  const rungs=[1,2,3].map(l=>`<i class="${l<=c.d?"on":""}"></i>`).join("");
+  if(S.view!==null)return renderLocked();
+  const prog=progressHTML(null);
+  const perm=S.perm||[0,1,2,3];
+  const pos=k=>perm.indexOf(k)+1;
+  $("game").innerHTML=`
+    <div class="progress">${prog}</div>
+    <div class="ladder"><span class="rungs">${rungs}</span><span>Level: ${LEVEL[c.d]} · worth ${PTS[c.d]}</span>${reviewableCount()?`<button class="linkbtn" id="toReview">← Previous answers</button>`:""}</div>
+    <article class="file">
+      <div class="tabrow"><span class="mode">${esc(CH[c.ch]||c.ch)}</span><span>${c.ref}</span></div>
+      <h2>${esc(c.title)}</h2>
+      <dl>${c.facts.map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
+      <div class="meta"><span class="chip d${c.d}">${LEVEL[c.d]}</span>${c.t===SEC?'<span class="chip sec">Verify</span>':""}</div>
+      ${done?`<div class="stamp ${right?"ok":"bad"}">${right?"Cleared":"Escalated"}</div>`:""}
+    </article>
+    <p class="q">${esc(c.q)}</p>
+    <div class="opts">${perm.map((k,j)=>{let cls="opt";if(done)cls+=k===c.ans?" right":k===S.picked?" wrong":" dim";
+      return `<button class="${cls}" id="opt${j}" data-j="${j}" ${done?"disabled":""}><kbd>${j+1}</kbd><span>${esc(c.opts[k])}</span></button>`;}).join("")}</div>
+    ${done?`<div class="verdict ${right?"ok":"bad"}">
+      <h3>${right?"Correct. +"+PTS[c.d]+" points. Next file is harder.":"Not quite. No points. Next file is easier."}</h3>
+      <h4>Why option ${pos(c.ans)} is right</h4>
+      <p>${esc(c.why)}</p>
+      <h4>Why the other answers are wrong</h4>
+      <ul class="whynot">${perm.filter(k=>k!==c.ans).map(k=>`<li class="${k===S.picked?"mine":""}"><b>${pos(k)}. ${esc(c.opts[k])}</b>${k===S.picked?" (your answer)":""}<br>${esc(c.no[k])}</li>`).join("")}</ul>
+      ${lawHTML(c)}
+      <span class="cite">${esc(c.cite)}</span>
+    </div>
+    <button class="btn" id="next">${S.hist.length>=S.len?"See your result":"Next file"}</button>`:""}`;
+  document.querySelectorAll(".opt:not(:disabled)").forEach(b=>b.onclick=()=>pick(+b.dataset.j));
+  wireProgress();
+  if($("toReview"))$("toReview").onclick=()=>openReview(reviewableCount()-1);
+  if(done){$("next").onclick=next;$("next").focus({preventScroll:true});}
+}
+/* answered questions other than the live one can be revisited, read-only */
+function reviewableCount(){return S.picked!==null?S.hist.length-1:S.hist.length;}
+function openReview(i){if(i<0||i>=reviewableCount())return;S.view=i;render();window.scrollTo({top:0});}
+function closeReview(){S.view=null;render();window.scrollTo({top:0});}
+function progressHTML(active){
+  const n=reviewableCount();
+  return Array.from({length:S.len},(_,j)=>{const h=S.hist[j];
+    const cls=(h?(h.ok?"ok":"bad"):j===S.hist.length?"cur":"")+(j===active?" sel":"");
+    if(j<n)return `<button class="seg ${cls}" data-i="${j}" aria-label="Review question ${j+1}, ${h.ok?"answered right":"answered wrong"}"></button>`;
+    return `<i class="${cls}"></i>`;}).join("");
+}
+function wireProgress(){document.querySelectorAll(".progress .seg").forEach(b=>b.onclick=()=>openReview(+b.dataset.i));}
+function renderLocked(){
+  const i=S.view,h=S.hist[i],c=CASES[h.k],perm=h.perm||[0,1,2,3],right=h.ok,pos=k=>perm.indexOf(k)+1,n=reviewableCount();
+  $("game").innerHTML=`
+    <div class="progress">${progressHTML(i)}</div>
+    <div class="lockbar" role="status"><span>Reviewing question ${i+1} of ${S.len} · answers are locked</span>
+      <span class="locknav"><button class="btn ghost small" id="revPrev" ${i===0?"disabled":""}>← Previous</button><button class="btn ghost small" id="revNext" ${i>=n-1?"disabled":""}>Next →</button><button class="btn small" id="revBack">Back to current question</button></span></div>
+    <article class="file">
+      <div class="tabrow"><span class="mode">${esc(CH[c.ch]||c.ch)}</span><span>${c.ref}</span></div>
+      <h2>${esc(c.title)}</h2>
+      <dl>${c.facts.map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
+      <div class="meta"><span class="chip d${c.d}">${LEVEL[c.d]}</span>${c.t===SEC?'<span class="chip sec">Verify</span>':""}</div>
+      <div class="stamp ${right?"ok":"bad"}">${right?"Cleared":"Escalated"}</div>
+    </article>
+    <p class="q">${esc(c.q)}</p>
+    <div class="opts">${perm.map((k,j)=>{const cls="opt locked"+(k===c.ans?" right":k===h.picked?" wrong":" dim");
+      return `<button class="${cls}" disabled aria-disabled="true"><kbd>${j+1}</kbd><span>${esc(c.opts[k])}${k===h.picked?' <em class="yours">Your answer</em>':""}</span></button>`;}).join("")}</div>
+    <div class="verdict ${right?"ok":"bad"}">
+      <h3>${right?"You got this one right. +"+PTS[c.d]+" points":"You got this one wrong"}</h3>
+      <h4>Why option ${pos(c.ans)} is right</h4>
+      <p>${esc(c.why)}</p>
+      <h4>Why the other answers are wrong</h4>
+      <ul class="whynot">${perm.filter(k=>k!==c.ans).map(k=>`<li class="${k===h.picked?"mine":""}"><b>${pos(k)}. ${esc(c.opts[k])}</b>${k===h.picked?" (your answer)":""}<br>${esc(c.no[k])}</li>`).join("")}</ul>
+      ${lawHTML(c)}
+      <span class="cite">${esc(c.cite)}</span>
+    </div>
+    <button class="btn" id="revBack2">Back to current question</button>`;
+  wireProgress();
+  $("revPrev").onclick=()=>openReview(i-1);
+  $("revNext").onclick=()=>openReview(i+1);
+  $("revBack").onclick=closeReview;$("revBack2").onclick=closeReview;
+  $("revBack").focus({preventScroll:true});
+}
+const L4="ABCD";
+function lawHTML(c){
+  if(!c.law||!c.law.length)return "";
+  return `<div class="law"><h4>What the regulation says</h4>${c.law.map(([src,t])=>`<figure><figcaption>${esc(src)}</figcaption><blockquote>${esc(t)}</blockquote></figure>`).join("")}</div>`;
+}
+function reviewItem(h,i){
+  const c=CASES[h.k],perm=h.perm||[0,1,2,3];
+  const opts=perm.map((k,j)=>{const isAns=k===c.ans,isPick=k===h.picked;
+    const tag=isAns&&isPick?"Your answer · correct":isAns?"Correct answer":isPick?"Your answer":"";
+    return `<li class="ro${isAns?" ans":""}${isPick&&!isAns?" pick":""}"><span class="rk">${j+1}</span><span class="rt">${esc(c.opts[k])}${tag?`<em>${tag}</em>`:""}${!isAns?`<small>${esc(c.no[k]||"")}</small>`:""}</span></li>`;}).join("");
+  return `<li class="revitem" data-ok="${h.ok?1:0}"><details${h.ok?"":" open"}>
+    <summary><span class="rnum">${i+1}</span><span class="rmark ${h.ok?"ok":"bad"}">${h.ok?"Right":"Wrong"}</span><span class="rtitle">${esc(c.title)}</span><span class="rmeta">${esc(CH[c.ch]||c.ch)} · ${LEVEL[c.d]} · ${esc(c.ref)}</span></summary>
+    <div class="rbody">
+      <p class="rq">${esc(c.q)}</p>
+      <ol class="ropts">${opts}</ol>
+      <p class="rwhy"><b>Why ${perm.indexOf(c.ans)+1} is right:</b> ${esc(c.why)}</p>
+      ${lawHTML(c)}
+      <p class="cite">${esc(c.cite)}</p>
+    </div></details></li>`;
+}
+function reviewText(){
+  return S.name+" · "+S.score+" points · "+S.correct+"/"+S.hist.length+" right\n\n"+S.hist.map((h,i)=>{const c=CASES[h.k],perm=h.perm||[0,1,2,3];
+    return (i+1)+". ["+(h.ok?"RIGHT":"WRONG")+"] "+c.title+" ("+(CH[c.ch]||c.ch)+", "+LEVEL[c.d]+", "+c.ref+")\n"+c.q+"\n"+
+      perm.map((k,j)=>"  "+(j+1)+". "+c.opts[k]+(k===c.ans?"  <- correct":"")+(k===h.picked&&k!==c.ans?"  <- your answer":"")+(k===h.picked&&k===c.ans?" (your answer)":"")).join("\n")+
+      "\nWhy: "+c.why+"\nSource: "+c.cite+((c.law&&c.law.length)?"\nRegulation: "+c.law.map(([s,t])=>s+": "+t).join(" | "):"");}).join("\n\n");
+}
+function reviewCSV(){
+  const q=v=>'"'+String(v==null?"":v).replace(/"/g,'""')+'"';
+  const head=["#","result","ref","chapter","level","title","question","option_1","option_2","option_3","option_4","your_answer","correct_answer","explanation","citation"];
+  const rows=S.hist.map((h,i)=>{const c=CASES[h.k],perm=h.perm||[0,1,2,3];
+    return [i+1,h.ok?"right":"wrong",c.ref,CH[c.ch]||c.ch,LEVEL[c.d],c.title,c.q,...perm.map(k=>c.opts[k]),(perm.indexOf(h.picked)+1)+". "+c.opts[h.picked],(perm.indexOf(c.ans)+1)+". "+c.opts[c.ans],c.why,c.cite];});
+  return [head,...rows].map(r=>r.map(q).join(",")).join("\r\n");
+}
+function renderEnd(){
+  const by=l=>S.hist.filter(h=>h.d===l);
+  const missed=S.hist.filter(h=>!h.ok);
+  const top=Math.max(...S.hist.map(h=>h.d));
+  
+  $("game").innerHTML=`<section class="end">
+    <h2>${S.score} points</h2>
+    <p>${esc(S.name)}, you got ${S.correct} of ${S.hist.length} right and reached ${LEVEL[top]} level.${S.newBest?" That's your new best.":""} <span id="postMsg">${BOARD_ON&&L.ready?"Posting your score to the league table…":""}</span></p>
+    <div class="grade">${[1,2,3].map(l=>`<div><span>${LEVEL[l]}</span><b>${by(l).filter(h=>h.ok).length}/${by(l).length}</b></div>`).join("")}</div>
+    <div class="row"><button class="btn" id="again">Play another round</button><button class="btn ghost" id="rename">Change name</button></div>
+  </section>
+  <section class="review" aria-labelledby="revTitle">
+    <div class="revhead">
+      <h2 id="revTitle">Your answers</h2>
+      <div class="revtools">
+        <div class="seg" role="group" aria-label="Show">
+          <button class="segb" data-f="all" aria-pressed="true">All ${S.hist.length}</button>
+          <button class="segb" data-f="wrong" aria-pressed="false">Wrong ${missed.length}</button>
+          <button class="segb" data-f="right" aria-pressed="false">Right ${S.hist.length-missed.length}</button>
+        </div>
+        <button class="btn ghost small" id="copyRev">Copy as text</button>
+        <button class="btn ghost small" id="dlRev">Download CSV</button>
+      </div>
+    </div>
+    <p class="note" id="revNote">Every question from this round, with the options in the order you saw them. Wrong answers are open; click any question to expand it.</p>
+    <ol class="revlist" id="revList">${S.hist.map((h,i)=>reviewItem(h,i)).join("")}</ol>
+  </section>`;
+  document.querySelectorAll(".segb").forEach(b=>b.onclick=()=>{
+    document.querySelectorAll(".segb").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+    const f=b.dataset.f;document.querySelectorAll(".revitem").forEach(li=>{li.hidden=f==="wrong"?li.dataset.ok==="1":f==="right"?li.dataset.ok==="0":false;});
+  });
+  $("copyRev").onclick=async()=>{const t=reviewText();try{await navigator.clipboard.writeText(t);$("revNote").textContent="Copied all "+S.hist.length+" questions to your clipboard.";}catch(e){const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");$("revNote").textContent="Copied to your clipboard.";}catch(_){$("revNote").textContent="Copy didn't work in this browser. Use Download CSV instead.";}ta.remove();}};
+  $("dlRev").onclick=()=>{const blob=new Blob(["\uFEFF"+reviewCSV()],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="custody-desk-round-"+new Date().toISOString().slice(0,16).replace(/[:T]/g,"-")+".csv";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);$("revNote").textContent="Downloaded. Open it in Excel to sort and filter.";};
+  $("again").onclick=()=>{S.screen="intro";render();setTimeout(begin,0);};
+  $("rename").onclick=()=>{S.screen="intro";render();};
+}
+
+document.addEventListener("keydown",e=>{
+  if(!S||S.screen!=="play"||e.target.tagName==="INPUT")return;
+  if(S.view!==null){
+    if(e.key==="ArrowLeft")openReview(S.view-1);
+    else if(e.key==="ArrowRight")openReview(S.view+1);
+    else if(e.key==="Escape")closeReview();
+    return;
+  }
+  if(S.picked===null&&/^[1-4]$/.test(e.key))pick(+e.key-1);
+  else if(S.picked!==null&&e.key==="Enter"&&document.activeElement?.id!=="next")next();
+});
+
+start({});
+connect();
+loadBank();
+</script>
+</body>
+</html>
