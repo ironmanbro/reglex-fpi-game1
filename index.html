@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Reglex: the FPI regulation game</title>
-<meta name="description" content="Reglex is a game that tests what you know about India's FPI regulations. Read the case, make the call, and see the regulation that decides it. Regular FPI, SWAGAT-FI and GS-FPI, with a live league table.">
+<meta name="description" content="Reglex is a game that tests what you know about India's FPI regulations. Read the case, make the call, and see the regulation that decides it. Regular FPI, SWAGAT-FI and GS-FPI.">
 <meta property="og:title" content="Reglex: the FPI regulation game">
-<meta property="og:description" content="Every file hides a breach. Make the call, see the exact regulation behind it, and climb the live league table.">
+<meta property="og:description" content="Every file hides a breach. Make the call, and see the exact regulation behind it.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://reglex.ironmanbro.workers.dev/og.png">
 <meta property="og:image:width" content="1200">
@@ -21,7 +21,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Special+Elite&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
 <script src="config.js?v=4"></script>
 <style>
-/* Layout: a detective's desk at night. Case folder (manila paper) centre stage, verdict beneath, the law pinned below; league table and how-it-works on the right wall. Single, deliberate dark theme. */
+/* Layout: a detective's desk at night. Case folder (manila paper) centre stage, verdict beneath, the law pinned below; how-it-works on the right wall at the start. Single, deliberate dark theme. */
 :root{
   color-scheme:dark;
   --night:#0b0a08; --desk:#15120e; --desk-2:#1d1913; --rule:#352c22; --smoke:#a3957f; --bone:#ece3d2;
@@ -177,6 +177,7 @@ footer{position:relative;z-index:1;font-size:13px;color:var(--smoke);border-top:
 .startfile .len[aria-checked="true"]{background:var(--ink);color:var(--manila);border-color:var(--ink)}
 .startfile .btn{background:var(--blood);color:#f6eedd;box-shadow:0 3px 0 #7d2a1d}
 .startfile .err{color:#8f2a1b}
+.startfile .note{color:var(--ink-soft);margin-top:4px}
 .startfile .row{margin-top:18px}
 .howto ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;counter-reset:s}
 .howto ol li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;font-size:14.5px;color:var(--smoke);counter-increment:s}
@@ -255,12 +256,6 @@ footer .by{font-family:var(--f-type);white-space:nowrap}
   <div class="layout" id="layout">
     <main class="game" id="game"></main>
     <aside class="board" id="side">
-      <section class="panel side" id="board" hidden aria-live="polite">
-        <h2>Most Wanted <small id="boardMeta"></small></h2>
-        <div class="tabs" role="tablist" aria-label="Round length" id="tabs"></div>
-        <ul class="table" id="table"></ul>
-        <p class="note" id="boardNote"></p>
-      </section>
       <section class="panel side howto" id="howto" hidden>
         <h2>How a file works</h2>
         <ol>
@@ -360,75 +355,30 @@ async function loadBank(){
 }
 function applyBank(){if(BANK.pending){CASES=BANK.pending;BANK.pending=null;BANK.source="questions.csv";}}
 
-/* ---------- league table (Supabase REST, anon key only) ---------- */
+/* ---------- private score saving (Supabase RPC, anon key only) ----------
+   There is no league table. After every answer the round is upserted through save_round(),
+   which can write but never read, so a player who leaves early keeps the score from their last answer. */
 const CFG_DEFAULT={supabaseUrl:"https://ehhljhueboqwyyxjstpa.supabase.co",supabaseAnonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGxqaHVlYm9xd3l5eGpzdHBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5MTI5NzgsImV4cCI6MjEwODQ4ODk3OH0.3JMxx6LJYeuPJYgvhFb4CzcHrZHvYnatLrlJpPpa0IM"};
 const CFG_FILE=window.CDL_CONFIG||{};
 const CFG=(CFG_FILE.supabaseUrl&&!/YOUR_/.test(CFG_FILE.supabaseUrl+CFG_FILE.supabaseAnonKey))?CFG_FILE:CFG_DEFAULT;
-const BOARD_ON=!!(CFG.supabaseUrl&&CFG.supabaseAnonKey);
-const L={rows:[],ready:false,filter:0,note:""};
-async function sb(path,opts){
-  opts=opts||{};
-  const r=await fetch(CFG.supabaseUrl.replace(/\/$/,"")+"/rest/v1/"+path,Object.assign({},opts,{headers:Object.assign({apikey:CFG.supabaseAnonKey,Authorization:"Bearer "+CFG.supabaseAnonKey,"Content-Type":"application/json"},opts.headers||{})}));
-  if(!r.ok)throw new Error("HTTP "+r.status);
-  return r.status===204||r.status===201?null:r.json();
+const SAVE_ON=!!(CFG.supabaseUrl&&CFG.supabaseAnonKey);
+function newId(){
+  if(window.crypto&&crypto.randomUUID)return crypto.randomUUID();
+  return "10000000-1000-4000-8000-100000000000".replace(/[018]/g,c=>(c^(crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4)).toString(16));
 }
-async function loadBoard(){
-  if(!BOARD_ON)return;
-  try{
-    const rows=await sb("scores?select=name,score,correct,total,created_at&order=score.desc,created_at.asc&limit=500"+(L.filter?"&total=eq."+L.filter:""));
-    const seen=new Set();L.rows=[];
-    for(const r of rows){const k=String(r.name).trim().toLowerCase();if(seen.has(k))continue;seen.add(k);L.rows.push(r);if(L.rows.length>=50)break;}
-    L.ready=true;L.note="";
-  }catch(e){L.note="Couldn't reach the league table. Retrying.";}
-  renderBoard();
+let saveQ=Promise.resolve();
+function saveRound(){
+  if(!SAVE_ON||!S.rid)return;
+  const body=JSON.stringify({p_id:S.rid,p_name:S.name,p_total:S.len,p_answered:S.hist.length,p_correct:S.correct,p_score:S.score,
+    p_finished:S.hist.length>=S.len,p_answers:S.hist.map(h=>({ref:CASES[h.k].ref,ok:h.ok,level:h.d,pick:"ABCD"[h.picked]}))});
+  saveQ=saveQ.then(()=>fetch(CFG.supabaseUrl.replace(/\/$/,"")+"/rest/v1/rpc/save_round",{method:"POST",keepalive:true,body,
+    headers:{apikey:CFG.supabaseAnonKey,Authorization:"Bearer "+CFG.supabaseAnonKey,"Content-Type":"application/json"}})
+    .then(r=>{if(!r.ok)console.warn("Reglex: score not saved, HTTP "+r.status);})).catch(e=>console.warn("Reglex: score not saved",e));
 }
-function connect(){
-  renderTabs();renderBoard();
-  if(!BOARD_ON)return;
-  loadBoard();
-  setInterval(()=>{if(document.visibilityState==="visible")loadBoard();},15000);
-  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")loadBoard();});
-}
-async function submitRound(){
-  if(!BOARD_ON||!L.ready)return;
-  const el=()=>$("postMsg");
-  try{
-    await sb("scores",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({name:S.name,score:S.score,correct:S.correct,total:S.len})});
-    if(el())el().textContent="You're on the Most Wanted board.";
-    loadBoard();
-  }catch(e){if(el())el().textContent="Your score couldn't be posted. Check your connection.";}
-}
-function renderTabs(){
-  const t=$("tabs");t.textContent="";
-  [[0,"All"],[10,"10"],[15,"15"],[20,"20"],[25,"25"]].forEach(([n,lab])=>{
-    const b=document.createElement("button");b.className="tab";b.setAttribute("role","tab");b.textContent=lab;
-    b.setAttribute("aria-selected",String(L.filter===n));b.onclick=()=>{L.filter=n;renderTabs();loadBoard();};
-    t.appendChild(b);
-  });
-}
-function renderBoard(){
-  const show=BOARD_ON&&L.ready;$("board").hidden=!show;
-  layoutSide();
-  if(!show)return;
-  $("boardMeta").textContent=L.rows.length+(L.rows.length===1?" detective":" detectives")+" · live";
-  const t=$("table");t.textContent="";
-  if(!L.rows.length){const li=document.createElement("li");li.style.display="block";li.textContent="No one on the board yet. Finish a round to take the top spot.";t.appendChild(li);}
-  const me=(S&&S.name||"").trim().toLowerCase();
-  L.rows.forEach((r,i)=>{
-    const li=document.createElement("li");const isMe=me&&String(r.name).trim().toLowerCase()===me;if(isMe)li.className="me";
-    const rk=document.createElement("span");rk.className="rk";rk.textContent=i+1;
-    const nm=document.createElement("span");nm.className="nm";nm.textContent=r.name+(isMe?" (you)":"");
-    const pts=document.createElement("span");pts.className="pts";pts.textContent=r.score;
-    const sub=document.createElement("span");sub.className="sub";sub.textContent=r.correct+"/"+r.total+" solved · "+r.total+"-file round";
-    li.append(rk,nm,pts,sub);t.appendChild(li);
-  });
-  $("boardNote").textContent=L.note;
-}
-/* the right wall holds the league table, plus how-it-works on the start screen; collapse the column when both are empty */
+/* the right wall holds how-it-works on the start screen only; during a round the desk takes the full width */
 function layoutSide(){
-  $("howto").hidden=!(S&&S.screen==="intro");
-  const empty=$("board").hidden&&$("howto").hidden;
-  $("side").hidden=empty;$("layout").classList.toggle("solo",empty);
+  const show=!!(S&&S.screen==="intro");
+  $("howto").hidden=!show;$("side").hidden=!show;$("layout").classList.toggle("solo",!show);
 }
 
 /* ---------- game ---------- */
@@ -450,7 +400,7 @@ function begin(){
   const v=($("name")?.value||"").trim().slice(0,24);
   if(!v){$("nameErr").textContent="Sign the duty roster first: enter your name.";$("name").focus();return;}
   S.name=v;lsSet("cdl-name",v);lsSet("cdl-len",String(S.len));
-  Object.assign(S,{screen:"play",level:2,used:[],score:0,correct:0,hist:[],view:null});
+  Object.assign(S,{screen:"play",level:2,used:[],score:0,correct:0,hist:[],view:null,rid:newId()});
   draw();render();window.scrollTo({top:0});
 }
 function pick(j){
@@ -458,14 +408,14 @@ function pick(j){
   const c=CASES[S.cur],k=S.perm[j];S.picked=k;
   const ok=k===c.ans;S.hist.push({k:S.cur,ok,d:c.d,picked:k,perm:S.perm.slice()});
   if(ok){S.score+=PTS[c.d];S.correct++;S.level=Math.min(3,S.level+1);}else S.level=Math.max(1,S.level-1);
-  render();
+  saveRound();render();
   const d=document.querySelector(".debrief");if(d)d.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
 }
 function next(){S.view=null;if(S.hist.length>=S.len)return finish();draw();render();window.scrollTo({top:0});}
 function finish(){
   S.screen="end";
   const best=+lsGet("cdl-best")||0;S.newBest=S.score>best&&S.score>0;if(S.newBest)lsSet("cdl-best",String(S.score));
-  submitRound();render();window.scrollTo({top:0});
+  render();window.scrollTo({top:0});
 }
 
 function render(){
@@ -487,7 +437,7 @@ function renderIntro(){
     <ul class="proof">
       <li><b>Adaptive</b>Rookie to Inspector as you go</li>
       <li><b>Cited</b>Every answer quotes the regulation</li>
-      <li><b>Ranked</b>A live league table</li>
+      <li><b>Private</b>No league table. Your score is yours</li>
     </ul>
     <article class="folder startfile" data-tab="Open a new case">
       <div class="startgrid">
@@ -497,6 +447,7 @@ function renderIntro(){
       </div>
       <div class="row"><button class="btn" id="go">Open the first file</button></div>
       <p class="err" id="nameErr"></p>
+      <p class="note">There's no league table: your score is shown only to you. Your name and answers are saved privately after each answer so the game's creator can improve the cases.</p>
     </article>
   </section>`;
   $("name").value=S.name||"";
@@ -609,7 +560,7 @@ function renderEnd(){
   $("game").innerHTML=`<section class="panel report">
     <div class="eyebrow">Round report</div>
     <h2>${S.score} reputation</h2>
-    <p>${esc(S.name)}, you cleared ${S.correct} of ${S.hist.length} files and made it to ${RANK[top]}.${S.newBest?" Your best round yet.":""} ${verdict} <span id="postMsg">${BOARD_ON&&L.ready?"Posting to the Most Wanted board…":""}</span></p>
+    <p>${esc(S.name)}, you cleared ${S.correct} of ${S.hist.length} files and made it to ${RANK[top]}.${S.newBest?" Your best round yet.":""} ${verdict} There's no public league table, so this result stays private.</p>
     <div class="grade">${[1,2,3].map(l=>`<div><span>${RANK[l]}</span><b>${by(l).filter(h=>h.ok).length}/${by(l).length}</b></div>`).join("")}</div>
     <div class="row"><button class="btn" id="again">Play another round</button><button class="btn ghost" id="rename">Change name</button></div>
   </section>
@@ -649,7 +600,7 @@ document.addEventListener("keydown",e=>{
   if(S.picked===null&&/^[1-4]$/.test(e.key))pick(+e.key-1);
   else if(S.picked!==null&&e.key==="Enter"&&document.activeElement?.id!=="next")next();
 });
-start();connect();loadBank();
+start();loadBank();
 </script>
 </body>
 </html>
