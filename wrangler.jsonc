@@ -1,0 +1,12 @@
+// Cloudflare Workers Builds deploys this on every push to main.
+// Only the four site files are published; tools, SQL and the question workbook stay out.
+{
+  "name": "reglex",
+  "compatibility_date": "2026-10-01",
+  "build": {
+    "command": "rm -rf dist && mkdir dist && cp index.html questions.csv config.js og.png dist/"
+  },
+  "assets": {
+    "directory": "./dist"
+  }
+}
